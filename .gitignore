@@ -1,0 +1,14 @@
+# data (not redistributable, 111 MB)
+data.parquet
+*.parquet
+# environments & caches
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+# generated outputs (rebuilt by the scripts in analysis/)
+analysis/out/
+*.npy
+*.log
+# report deliverables (PDFs, published artifact HTML) — not source
+deliverables/
