@@ -25,6 +25,9 @@ Env: `.venv` (Python 3.12; pandas, pyarrow, numpy, scipy, scikit-learn, matplotl
 - `analysis/ml_features.py` → `ml_embed.py`/`ml_cluster2.py` (all wallets; weak) → `ml_active.py` (n≥20: AE embedding, UMAP+HDBSCAN species, blind validation, probes) → `ml_skill.py` (denoised-skill vs raw-label vs profit AUC; attribution) → `ml_labels.py` (confident learning) → `ml_page.py` (OOF decile ledger + `out/memo_ml_artifact.html`). Outputs in `out/ml/`.
 - `analysis/out/` — generated tables/figures/memo (not source).
 
+## Eval harness
+`trackrecord/` — `python -m trackrecord eval <csv>` (price,size,won[,pnl]) or `wallet <address> --data data.parquet`. `core.py` = posterior against the census prior in `reference.json` (built by `analysis/build_reference.py`), `features.py` = trade list / census row → aggregates, `cli.py` = report card. Tests in `tests/`, example in `examples/`. Verdict thresholds: P(edge > +0.5¢/share) or P(edge < −0.5¢/share) > 0.95.
+
 ## Run order
 Skill/crowd memo: `skill_luck.py` → `crowd.py` → `figures.py` → `memo.py`. Two-Exploits memo: `edge.py` → `figures_edge.py` → `memo_edge.py`. Run from `analysis/` with `../.venv/bin/python`.
 
