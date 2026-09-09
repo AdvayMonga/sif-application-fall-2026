@@ -1,6 +1,9 @@
 """Build the ML memo page (v3): out-of-fold skill scores, SVG figures, published as its own artifact."""
-import json, re, numpy as np, pandas as pd
+import json, re, sys, numpy as np, pandas as pd
 from common import load
+sys.path.insert(0, "/Users/advaymonga/Desktop/sif/sif-application-fall-2026")
+from trackrecord import evaluate, from_wallet_row, from_trades
+from trackrecord.cli import card
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.model_selection import StratifiedKFold
 OUT = "/Users/advaymonga/Desktop/sif/sif-application-fall-2026/analysis/out/ml/"; ROOT = "/Users/advaymonga/Desktop/sif/sif-application-fall-2026/analysis/out/"
@@ -73,11 +76,16 @@ named = {0: "machines A", 11: "machines B", 3: "farm A", 13: "farm B", 14: "farm
 rows = "".join(f"<tr><td>{named.get(i, f'retail {i}')}</td><td>{int(r.wallets):,}</td><td>${r.notional_M:,.0f}M</td><td>{r.pnl_M:+.1f}</td><td>{r.c_per_dollar:+.2f}</td><td>{pct(r.frac_profitable,0)}</td><td>{int(r.median_n)}</td><td>{r.avg_price:.2f}</td><td>{pct(r.maker_share,0)}</td><td>{r.ev_zero_pnl_maker_lift:.1f}×</td><td>{r.ev_bust_lift:.1f}×</td></tr>" for i, r in ct.sort_values("pnl_M", ascending=False).iterrows())
 a20, a50 = auc["n>=20 | denoised skill"]["auc"], auc["n>=50 | denoised skill"]["auc"]; r50, p50 = auc["n>=50 | raw label sharp-vs-awful"]["auc"], auc["n>=50 | profit sign"]["auc"]
 top = led.iloc[-1]; lab = json.load(open(OUT + "labels_summary.json"))
+def rc(addr, title):
+    row = df[df.trader.str.lower() == addr.lower()].iloc[0]; return f'<p class="small" style="margin:14px 0 4px"><strong>{title}</strong></p><pre class="card">{card(evaluate(from_wallet_row(row)))}</pre>'
+cards = rc("0x2728d99B2405a52db60160837E130B3ba3c1A83c", "The biggest winner in the file") + rc("0x99C538dB47a2cBc0A56EbF465309d678a6f7d406", "A one-trade wallet the dataset labels \"sharp\"") + \
+        rc(df[(df.n >= 50) & (df.trader_label == "sharp")].sort_values("trader_pnl").iloc[len(df[(df.n >= 50) & (df.trader_label == "sharp")]) // 2].trader, "A typical 50+-trade wallet labeled \"sharp\"") + \
+        f'<p class="small" style="margin:14px 0 4px"><strong>The example CSV shipped with the tool</strong> (synthetic, 60 trades)</p><pre class="card">{card(evaluate(from_trades(pd.read_csv("/Users/advaymonga/Desktop/sif/sif-application-fall-2026/examples/sample_trades.csv"))))}</pre>' 
 
 page = f"""<title>SIF Application, Fall 2026 (v3)</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 {css}
-<style>.chart .ref2{{fill:var(--muted);opacity:.55}} .chart rect.loss{{fill:var(--loss)}} .chart .p-farm{{fill:#eda100}} .chart .p-bust{{fill:var(--loss)}}</style>
+<style>pre.card{{background:var(--card);border-radius:6px;padding:12px 14px;font:12.5px/1.5 "IBM Plex Mono",ui-monospace,Menlo,monospace;overflow-x:auto;white-space:pre;margin:0 0 6px;color:var(--ink)}} .chart .ref2{{fill:var(--muted);opacity:.55}} .chart rect.loss{{fill:var(--loss)}} .chart .p-farm{{fill:#eda100}} .chart .p-bust{{fill:var(--loss)}}</style>
 <div class="wrap">
 <h1>SIF Application, Fall 2026</h1>
 <p class="sub">Advay Monga · 604,578 Polymarket wallets, June 2024 – March 2025. Every number comes from the provided file alone.</p>
@@ -130,11 +138,12 @@ page = f"""<title>SIF Application, Fall 2026 (v3)</title>
 <div class="cap"><strong>Figure 4.</strong> 124,064 active wallets, 14,000 shown. Two clusters are the machines (${ct.loc[[0,11],'notional_M'].sum():,.0f}M notional, +${ct.loc[[0,11],'pnl_M'].sum():.1f}M). Three are reward farms (zero-P&amp;L makers 3–6× over-represented). Two are wallets that lost everything. Everyone else loses 0.1–7¢ per dollar.</div>
 <div class="tw"><table><thead><tr><th>cluster</th><th>wallets</th><th>notional</th><th>P&amp;L $M</th><th>¢/$</th><th>profitable</th><th>median trades</th><th>avg price</th><th>maker share</th><th>zero-P&amp;L lift</th><th>bust lift</th></tr></thead><tbody>{rows}</tbody></table></div>
 
-<h2>What it means</h2>
+<h2>What SIF can do with this</h2>
 <ul>
-<li><strong>For evaluating anyone's track record:</strong> denoise before you model. On this data the same features go from useless (0.67) to strong (0.90) when the target stops being "who got lucky."</li>
-<li><strong>For spotting skill early:</strong> bet-size dispersion is observable after a handful of trades and needs no P&amp;L. It is the first thing to look at in a new trader, or a new strategy.</li>
-<li><strong>For the market:</strong> the money is not spread across "sharp" retail. It sits in two machine clusters; everything human loses on average, and the only zero-loss humans are the farmers taking no risk.</li>
+<li><strong>Grade any track record before trusting it.</strong> The luck-removal step is the part a fund would actually use: it turns "up 15% this semester" into "P(real edge) = 0.31, {{n}} more trades needed." I packaged it as a small tool (appendix) that takes a CSV of trades or any wallet address.</li>
+<li><strong>Vet wallets before copying them.</strong> The addresses in this file are public and their trades are on-chain. Score a wallet on behavior, check its luck-adjusted edge, and only then consider following it. The forward test — do the top-decile wallets stay profitable after March 2025 — is the one thing this file cannot answer and the first thing to run with live data.</li>
+<li><strong>Watch sizing before P&amp;L.</strong> Bet-size dispersion is visible after a dozen trades and needs no outcomes. A member or a strategy that sizes every bet the same is showing the population's coin-flipper signature early.</li>
+<li><strong>Know where the money actually is.</strong> Two machine clusters hold the profits. Retail loses on average; the only zero-loss humans are the reward farmers taking no risk. "Sharp retail" is mostly a label artifact.</li>
 </ul>
 
 <h2>Limitations</h2>
@@ -143,6 +152,11 @@ page = f"""<title>SIF Application, Fall 2026 (v3)</title>
 <li>The autoencoder embedding underperforms the raw features as a predictor (linear probe 0.82 vs 0.86); its value here is the map, not the model.</li>
 <li>Cross-sectional data: the model says which wallets <em>have been</em> skilled, not that they will stay so.</li>
 </ul>
+
+<h2>Appendix — the eval harness</h2>
+<p>A small Python package, <code>trackrecord</code>, that runs the same evaluation on any record. Input is a CSV of trades (price, size, won) or a wallet address from the census. It treats the record as true edge plus noise, uses the census's own recovered distribution of edge as the prior, and reports the luck-adjusted edge, its interval, a verdict, how many more trades would be needed for proof, and percentiles against the 124,064 active wallets. Six tests, one 16 KB reference file, no data dependency. Four real report cards:</p>
+{cards}
+<p class="small">Repository: <code>sif-application-fall-2026/</code> — <code>trackrecord/</code> (tool), <code>analysis/</code> (everything above), <code>tests/</code>, <code>README.md</code>.</p>
 
 <h2>Method</h2>
 <ul class="small">
