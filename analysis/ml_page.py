@@ -122,33 +122,33 @@ summary_rows = srow("biggest winner in the file", "0x2728d99B2405a52db60160837E1
 page = f"""<title>SIF Application, Fall 2026</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&family=Poppins:wght@300;400;500;700&display=swap">
 <style>
-:root{--sif-red:#8f151d;--sif-red-dark:#651016;--ink:#151515;--muted:#747474;--line:#dedede;--soft-line:#eeeeee;--paper:#ffffff;--wash:#f7f5f2;--positive:#1a8a52;--negative:#c0392b;--gold:#b8860b;--font-num:"JetBrains Mono",monospace;--font-ui:"Inter",system-ui,sans-serif}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--sif-red:#b8202a;--sif-red-dark:#8f151d;--ink:#e8e4df;--muted:#909090;--line:#2a2a2a;--soft-line:#222222;--paper:#1e1b18;--wash:#141210;--positive:#3fb87f;--negative:#d8584f;--gold:#d4a017}}
-:root[data-theme="dark"]{--sif-red:#b8202a;--sif-red-dark:#8f151d;--ink:#e8e4df;--muted:#909090;--line:#2a2a2a;--soft-line:#222222;--paper:#1e1b18;--wash:#141210;--positive:#3fb87f;--negative:#d8584f;--gold:#d4a017}
-*{box-sizing:border-box} body{margin:0;font-family:'Poppins',Arial,Helvetica,sans-serif;color:var(--ink);background:linear-gradient(180deg,rgba(143,21,29,.08),rgba(143,21,29,0) 190px),var(--wash);font-size:15.5px;line-height:1.55}
-.wrap{max-width:980px;margin:0 auto;padding:34px 32px 60px}
-.topbar{padding-bottom:18px;margin-bottom:26px;border-bottom:2px solid var(--sif-red)}
-.kicker{color:var(--sif-red);font-size:.72rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;margin:0 0 6px}
-h1{font-size:clamp(2rem,5vw,3.4rem);line-height:1;font-weight:500;margin:0 0 10px;letter-spacing:0}
-.sub{color:var(--muted);font-size:.9rem;margin:0}
-h2{font-size:1.15rem;font-weight:700;letter-spacing:.02em;margin:40px 0 12px;padding-left:12px;border-left:4px solid var(--sif-red)}
-h3{font-size:.95rem;font-weight:500;margin:24px 0 8px}
-p{margin:0 0 12px} ul{margin:0 0 12px;padding-left:22px} li{margin-bottom:6px} strong{font-weight:600}
-ul.lede{list-style:none;padding:0;margin:6px 0 16px} ul.lede li{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--sif-red);padding:12px 14px;margin:0 0 10px}
-a{color:var(--sif-red);text-decoration:none;border-bottom:1px solid transparent} a:hover,a:focus-visible{border-bottom-color:var(--sif-red);outline:none}
-.chart{width:100%;height:auto;display:block;margin:14px 0 6px;background:var(--paper);border:1px solid var(--line);font-family:var(--font-ui)}
-.chart .grid{stroke:var(--soft-line);stroke-width:1} .chart .axis{stroke:var(--line);stroke-width:1} .chart .tick{fill:var(--muted);font-size:12px}
-.chart .lbl{fill:var(--ink);font-size:12.5px} .chart .lbl.strong{fill:var(--ink);font-weight:600} .chart .lbl.accent{fill:var(--sif-red);font-weight:600} .chart .lbl.loss{fill:var(--negative);font-weight:600} .chart .lbl.muted{fill:var(--muted)}
-.chart .ref{fill:var(--muted)} .chart .ref2{fill:var(--line)} .chart .acc{fill:var(--sif-red);stroke:var(--paper);stroke-width:2} .chart .ci{stroke:var(--sif-red);stroke-width:2} .chart .gap{stroke:var(--muted);stroke-width:1.5;stroke-dasharray:3 3}
-.chart .bar{fill:var(--sif-red)} .chart rect.loss{fill:var(--negative)} .chart .p-farm{fill:var(--gold)} .chart .p-bust{fill:var(--negative)} .chart .mark:hover .bar,.chart .mark:hover .acc{filter:brightness(1.15)} .chart .mark{cursor:default}
-.chart .cone{fill:var(--muted);opacity:.14} .chart .cone2{fill:var(--muted);opacity:.10} .chart .eq{fill:none;stroke:var(--sif-red);stroke-width:2.2;stroke-linejoin:round} .chart .zero{stroke:var(--ink);stroke-width:1;stroke-dasharray:4 4;opacity:.5}
-.cap{color:var(--muted);font-size:.8rem;margin:0 0 18px;line-height:1.45}
-.tw{overflow-x:auto;margin:8px 0 18px;background:var(--paper);border:1px solid var(--line)} table{border-collapse:collapse;width:100%;font-family:var(--font-ui);font-size:.82rem;font-variant-numeric:tabular-nums}
-th,td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--soft-line);white-space:nowrap} th{color:var(--sif-red);font-weight:700;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;border-bottom:1px solid var(--line)}
-td:first-child,th:first-child{text-align:left;white-space:normal} td{font-family:var(--font-num)} td:first-child{font-family:var(--font-ui)}
-pre.card{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--sif-red);padding:12px 14px;font:12.5px/1.5 var(--font-num);overflow-x:auto;white-space:pre-wrap;margin:0 0 8px;color:var(--ink)}
-.small{font-size:.82rem;color:var(--muted)} code{font-family:var(--font-num);font-size:.85em;background:var(--paper);border:1px solid var(--soft-line);padding:1px 5px}
-@media (prefers-reduced-motion: reduce){*{transition:none}}
+:root{{--sif-red:#8f151d;--sif-red-dark:#651016;--ink:#151515;--muted:#747474;--line:#dedede;--soft-line:#eeeeee;--paper:#ffffff;--wash:#f7f5f2;--positive:#1a8a52;--negative:#c0392b;--gold:#b8860b;--font-num:"JetBrains Mono",monospace;--font-ui:"Inter",system-ui,sans-serif}}
+@media (prefers-color-scheme: dark){{:root:not([data-theme="light"]){{--sif-red:#b8202a;--sif-red-dark:#8f151d;--ink:#e8e4df;--muted:#909090;--line:#2a2a2a;--soft-line:#222222;--paper:#1e1b18;--wash:#141210;--positive:#3fb87f;--negative:#d8584f;--gold:#d4a017}}}}
+:root[data-theme="dark"]{{--sif-red:#b8202a;--sif-red-dark:#8f151d;--ink:#e8e4df;--muted:#909090;--line:#2a2a2a;--soft-line:#222222;--paper:#1e1b18;--wash:#141210;--positive:#3fb87f;--negative:#d8584f;--gold:#d4a017}}
+*{{box-sizing:border-box}} body{{margin:0;font-family:'Poppins',Arial,Helvetica,sans-serif;color:var(--ink);background:linear-gradient(180deg,rgba(143,21,29,.08),rgba(143,21,29,0) 190px),var(--wash);font-size:15.5px;line-height:1.55}}
+.wrap{{max-width:980px;margin:0 auto;padding:34px 32px 60px}}
+.topbar{{padding-bottom:18px;margin-bottom:26px;border-bottom:2px solid var(--sif-red)}}
+.kicker{{color:var(--sif-red);font-size:.72rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;margin:0 0 6px}}
+h1{{font-size:clamp(2rem,5vw,3.4rem);line-height:1;font-weight:500;margin:0 0 10px;letter-spacing:0}}
+.sub{{color:var(--muted);font-size:.9rem;margin:0}}
+h2{{font-size:1.15rem;font-weight:700;letter-spacing:.02em;margin:40px 0 12px;padding-left:12px;border-left:4px solid var(--sif-red)}}
+h3{{font-size:.95rem;font-weight:500;margin:24px 0 8px}}
+p{{margin:0 0 12px}} ul{{margin:0 0 12px;padding-left:22px}} li{{margin-bottom:6px}} strong{{font-weight:600}}
+ul.lede{{list-style:none;padding:0;margin:6px 0 16px}} ul.lede li{{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--sif-red);padding:12px 14px;margin:0 0 10px}}
+a{{color:var(--sif-red);text-decoration:none;border-bottom:1px solid transparent}} a:hover,a:focus-visible{{border-bottom-color:var(--sif-red);outline:none}}
+.chart{{width:100%;height:auto;display:block;margin:14px 0 6px;background:var(--paper);border:1px solid var(--line);font-family:var(--font-ui)}}
+.chart .grid{{stroke:var(--soft-line);stroke-width:1}} .chart .axis{{stroke:var(--line);stroke-width:1}} .chart .tick{{fill:var(--muted);font-size:12px}}
+.chart .lbl{{fill:var(--ink);font-size:12.5px}} .chart .lbl.strong{{fill:var(--ink);font-weight:600}} .chart .lbl.accent{{fill:var(--sif-red);font-weight:600}} .chart .lbl.loss{{fill:var(--negative);font-weight:600}} .chart .lbl.muted{{fill:var(--muted)}}
+.chart .ref{{fill:var(--muted)}} .chart .ref2{{fill:var(--line)}} .chart .acc{{fill:var(--sif-red);stroke:var(--paper);stroke-width:2}} .chart .ci{{stroke:var(--sif-red);stroke-width:2}} .chart .gap{{stroke:var(--muted);stroke-width:1.5;stroke-dasharray:3 3}}
+.chart .bar{{fill:var(--sif-red)}} .chart rect.loss{{fill:var(--negative)}} .chart .p-farm{{fill:var(--gold)}} .chart .p-bust{{fill:var(--negative)}} .chart .mark:hover .bar,.chart .mark:hover .acc{{filter:brightness(1.15)}} .chart .mark{{cursor:default}}
+.chart .cone{{fill:var(--muted);opacity:.14}} .chart .cone2{{fill:var(--muted);opacity:.10}} .chart .eq{{fill:none;stroke:var(--sif-red);stroke-width:2.2;stroke-linejoin:round}} .chart .zero{{stroke:var(--ink);stroke-width:1;stroke-dasharray:4 4;opacity:.5}}
+.cap{{color:var(--muted);font-size:.8rem;margin:0 0 18px;line-height:1.45}}
+.tw{{overflow-x:auto;margin:8px 0 18px;background:var(--paper);border:1px solid var(--line)}} table{{border-collapse:collapse;width:100%;font-family:var(--font-ui);font-size:.82rem;font-variant-numeric:tabular-nums}}
+th,td{{padding:8px 10px;text-align:right;border-bottom:1px solid var(--soft-line);white-space:nowrap}} th{{color:var(--sif-red);font-weight:700;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;border-bottom:1px solid var(--line)}}
+td:first-child,th:first-child{{text-align:left;white-space:normal}} td{{font-family:var(--font-num)}} td:first-child{{font-family:var(--font-ui)}}
+pre.card{{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--sif-red);padding:12px 14px;font:12.5px/1.5 var(--font-num);overflow-x:auto;white-space:pre-wrap;margin:0 0 8px;color:var(--ink)}}
+.small{{font-size:.82rem;color:var(--muted)}} code{{font-family:var(--font-num);font-size:.85em;background:var(--paper);border:1px solid var(--soft-line);padding:1px 5px}}
+@media (prefers-reduced-motion: reduce){{*{{transition:none}}}}
 </style>
 <div class="wrap">
 <div class="topbar"><p class="kicker">Smith Investment Fund · Application · Fall 2026</p><h1>Is a track record skill, or luck?</h1>
