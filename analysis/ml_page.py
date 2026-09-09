@@ -105,57 +105,45 @@ page = f"""<title>SIF Application, Fall 2026 (v3)</title>
 <style>pre.card{{background:var(--card);border-radius:6px;padding:12px 14px;font:12.5px/1.5 "IBM Plex Mono",ui-monospace,Menlo,monospace;overflow-x:auto;white-space:pre-wrap;margin:0 0 6px;color:var(--ink)}} .chart .ref2{{fill:var(--muted);opacity:.55}} .chart rect.loss{{fill:var(--loss)}} .chart .p-farm{{fill:#eda100}} .chart .p-bust{{fill:var(--loss)}}</style>
 <div class="wrap">
 <h1>SIF Application, Fall 2026</h1>
-<p class="sub">Advay Monga · A track-record evaluator built from 604,578 Polymarket wallets, then pointed at the census and at SIF Live.</p>
+<p class="sub">Advay Monga · An evaluator that answers "is this track record skill or luck?", built from 604,578 Polymarket wallets and pointed at the census and at SIF Live.</p>
 
-<h2>The conclusion</h2>
-<ul class="lede">
-<li><strong>I built <code>trackrecord</code>, a tool that answers "is this track record skill or luck?"</strong> Give it a wallet, a CSV of trades, or a daily P&amp;L series; it returns a luck-adjusted edge with an interval, the probability the edge is real, and how much more record it would take to prove it.</li>
-<li><strong>On the census it shows the dataset's own labels are mostly luck</strong> — and that once luck is removed, skill is predictable from behavior alone (AUC {a50:.2f}), with bet-size dispersion as the strongest tell.</li>
-<li><strong>On SIF Live it says: {rep1y['annualized_return']:+.1%} a year at Sharpe {rep1y['sharpe']:.2f} is a fine result that is not yet evidence.</strong> P(true mean return &gt; 0) = {rep1y['p_positive']:.0%}; at this Sharpe, ~{yrs:.0f} years of trading would be needed to be 95% sure.</li>
-</ul>
-<div class="kpi">
- <div><b>{a50:.2f}</b><span>AUC predicting skill from behavior, after luck removal (50+ trades)</span></div>
- <div><b>{r50:.2f}</b><span>same model predicting the dataset's own "sharp/awful" label</span></div>
- <div><b>{rep1y['p_positive']:.0%}</b><span>P(SIF Live's true mean return &gt; 0), one year of daily equity</span></div>
- <div><b>~{yrs:.0f} yrs</b><span>trading needed at Sharpe {rep1y['sharpe']:.2f} for 95% proof</span></div>
-</div>
-
-<h2>1. The tool</h2>
-<p>Every record is treated as <em>true edge + noise</em>. For bets, the noise is known exactly: it shrinks with the number of trades and depends on the prices traded (variance ≈ 0.87·p(1−p)/n, calibrated on 75k resolved single bets in the census). The prior over true edge is the population's own distribution, recovered from the census. The posterior gives the luck-adjusted edge, its interval, and the trades still needed for proof. A trade list also gets five more fronts: calibration against the price, whether sizing added or cost money, how much of the P&amp;L is one lucky trade, first-half vs second-half edge, and drawdown risk at a stated bankroll fraction. A return series gets a t-test, split-half Sharpe, streaks vs chance, autocorrelation, next-year drawdown odds, and alpha/beta against a benchmark.</p>
-<p class="small"><strong>How to read a card.</strong> <em>Realized edge</em> is what happened. <em>Luck-adjusted edge</em> is the posterior mean after shrinking toward the population. <em>P(edge &gt; +0.5¢)</em> is the probability the record reflects real, meaningful edge. <em>Trades for 95% proof</em> is how much more record it would take at the current pace. Percentiles compare against the {124064:,} wallets with 20+ trades.</p>
-
-<h2>2. Building it from the dataset</h2>
-<h3>2.1 — Why the dataset's labels can't be used as-is</h3>
-<p>The census labels each wallet awful / bad / good / sharp. The label is a cut on realized return, and most wallets made a handful of bets, so a wallet that bet three times and won twice is "sharp". Confident learning flags {pct(lab['flag_rate'],0)} of labels as likely wrong, {lab['flag_by_label']['sharp']*100:.0f}% of the "sharp" ones. The tool's first job is to replace that label with a probability.</p>
-<h3>2.2 — Removing luck: the prior the tool ships with</h3>
-<p>Nonparametric empirical-Bayes deconvolution over all wallets with 2+ trades recovers the distribution of true edge in the population: 91% of wallets within ±1¢ per share of zero, thin tails either side. That distribution is <code>trackrecord/reference.json</code>. Each wallet's posterior probability of positive edge becomes the denoised target for everything below.</p>
-<h3>2.3 — Does the denoised target mean anything? Behavior should predict it</h3>
-{grouped_auc()}
-<div class="cap"><strong>Figure 1.</strong> Five-fold cross-validated AUC of a gradient-boosted model on 27 behavior-only features (nothing derived from profit). Same features, same wallets, three targets.</div>
-<p>Behavior predicts the denoised target at {a20:.2f} / {a50:.2f} / {auc['n>=100 | denoised skill']['auc']:.2f} for wallets with 20 / 50 / 100+ trades; the same model on the given label scores 0.68 / 0.67 / 0.66 and on raw profit 0.72 / 0.70 / 0.69. The target, not the features, was the problem.</p>
-{importance()}
-<div class="cap"><strong>Figure 2.</strong> What the model uses. Bet-size dispersion is {attr.importance.iloc[0]/attr.importance.iloc[1]:.1f}× more important than anything else — which is why the tool reports a sizing front.</div>
-<h3>2.4 — Checked against real money</h3>
-{deciles()}
-<div class="cap"><strong>Figure 3.</strong> Wallets with 50+ trades sorted into deciles by out-of-fold predicted skill; bars are realized profit per dollar. Only the top decile is positive ({top.c_per_dollar:+.2f}¢/$, {pct(top.frac_profitable,0)} profitable, ${top.notional_M:,.0f}M notional); deciles 4–8 lose 2–7¢/$.</div>
-
-<h2>3. Results on the census</h2>
-<div class="tw"><table><thead><tr><th>record</th><th>trades</th><th>realized edge</th><th>luck-adjusted</th><th>P(real edge)</th><th>verdict</th></tr></thead><tbody>{summary_rows}</tbody></table></div>
-{cards}
-{umap_svg()}
-<div class="cap"><strong>Figure 4.</strong> The population, clustered without labels (autoencoder + HDBSCAN on 124,064 active wallets; 14,000 shown). Two clusters are the machines (${ct.loc[[0,11],'notional_M'].sum():,.0f}M notional, +${ct.loc[[0,11],'pnl_M'].sum():.1f}M); three are reward farms (zero-P&amp;L makers 3–6× over-represented); two are wallets that lost everything. Retail loses 0.1–7¢ per dollar. "Sharp retail" is mostly a label artifact.</div>
-
-<h2>4. Results on SIF Live</h2>
-<p>The club's dashboard publishes its paper account's daily equity (dollar-neutral cross-sectional mean reversion; {pos_n} open positions on 8 Sep 2026, ${gross:,.0f} gross, ${net:+,.0f} net). Run through the returns mode:</p>
+<h2>Results: SIF Live</h2>
+<p>The club's dashboard publishes its paper account's daily equity (dollar-neutral cross-sectional mean reversion; {pos_n} open positions on 8 Sep 2026, ${gross:,.0f} gross, ${net:+,.0f} net). Run through the evaluator:</p>
 {card1y}{card3m}
-<ul>
-<li><strong>The verdict is "unproven", and that is the right verdict.</strong> Sharpe {rep1y['sharpe']:.2f} over 250 days gives a 95% band on annual return of {rep1y['annualized_return_ci95'][0]:+.0%} to {rep1y['annualized_return_ci95'][1]:+.0%}. A strategy with zero true edge produces a year like this about a third of the time.</li>
+<ul class="lede">
+<li><strong>{rep1y['annualized_return']:+.1%} a year at Sharpe {rep1y['sharpe']:.2f} is a fine result that is not yet evidence.</strong> P(true mean return &gt; 0) = {rep1y['p_positive']:.0%}; the 95% band on annual return runs {rep1y['annualized_return_ci95'][0]:+.0%} to {rep1y['annualized_return_ci95'][1]:+.0%}. A strategy with zero edge produces a year like this about a third of the time. At this Sharpe, ~{yrs:.0f} years would be needed to be 95% sure.</li>
 <li><strong>The positions table flatters the strategy.</strong> {pos_win} of {pos_n} open positions are in profit while the year made {rep1y['annualized_return']:+.1%}: the 5% stop-loss removes losers from the table and leaves winners. It shows survivors, not performance.</li>
-<li><strong>The paper result is optimistic for live trading.</strong> {cheap_shorts} of {len(shorts)} shorts are stocks under $10; paper Alpaca lends them free, live many are hard-to-borrow and the rest carry borrow fees, and the daily 2 pm market-order rebalance carries no slippage model. Those costs are of the same order as the return.</li>
+<li><strong>The paper result is optimistic for live trading.</strong> {cheap_shorts} of {len(shorts)} shorts are stocks under $10 — free to borrow on paper, often hard-to-borrow or fee-bearing live — and the daily 2 pm market-order rebalance carries no slippage model. Those costs are of the same order as the return.</li>
 <li><strong>A design tension worth testing:</strong> a hard −5% stop on a mean-reversion entry exits exactly when the signal says the bounce is most likely.</li>
 </ul>
 
-<h2>5. What SIF can do with it</h2>
+<h2>Results: the census</h2>
+<p>The same evaluator on the dataset. The dataset's own "sharp / awful" labels are mostly luck: confident learning flags {pct(lab['flag_rate'],0)} of labels as likely wrong, {lab['flag_by_label']['sharp']*100:.0f}% of the "sharp" ones. Once luck is removed, skill is predictable from behavior alone (AUC {a50:.2f} vs {r50:.2f} on the raw label), and the strongest tell is bet-size dispersion.</p>
+<div class="tw"><table><thead><tr><th>record</th><th>trades</th><th>realized edge</th><th>luck-adjusted</th><th>P(real edge)</th><th>verdict</th></tr></thead><tbody>{summary_rows}</tbody></table></div>
+{cards}
+{umap_svg()}
+<div class="cap"><strong>Figure 1.</strong> The population, clustered without labels (autoencoder + HDBSCAN on 124,064 active wallets; 14,000 shown). Two clusters are the machines (${ct.loc[[0,11],'notional_M'].sum():,.0f}M notional, +${ct.loc[[0,11],'pnl_M'].sum():.1f}M); three are reward farms (zero-P&amp;L makers 3–6× over-represented); two are wallets that lost everything. Retail loses 0.1–7¢ per dollar. "Sharp retail" is mostly a label artifact.</div>
+
+<h2>How the evaluator works</h2>
+<p>Every record is treated as <em>true edge + noise</em>. For bets, the noise is known exactly: it shrinks with the number of trades and depends on the prices traded (variance ≈ 0.87·p(1−p)/n, calibrated on 75k resolved single bets in the census). The prior over true edge is the population's own distribution, recovered from the census. The posterior gives the luck-adjusted edge, its interval, and the trades still needed for proof. A trade list also gets five more fronts: calibration against the price, whether sizing added or cost money, how much of the P&amp;L is one lucky trade, first-half vs second-half edge, and drawdown risk at a stated bankroll fraction. A return series gets a t-test, split-half Sharpe, streaks vs chance, autocorrelation, next-year drawdown odds, and alpha/beta against a benchmark.</p>
+<p class="small"><strong>How to read a card.</strong> <em>Realized edge</em> is what happened. <em>Luck-adjusted edge</em> is the posterior mean after shrinking toward the population. <em>P(edge &gt; +0.5¢)</em> is the probability the record reflects real, meaningful edge. <em>Trades for 95% proof</em> is how much more record it would take at the current pace. Percentiles compare against the {124064:,} wallets with 20+ trades.</p>
+
+<h2>How it was built and checked on the dataset</h2>
+<h3>Why the dataset's labels can't be used as-is</h3>
+<p>The census labels each wallet awful / bad / good / sharp. The label is a cut on realized return, and most wallets made a handful of bets, so a wallet that bet three times and won twice is "sharp". Confident learning flags {pct(lab['flag_rate'],0)} of labels as likely wrong, {lab['flag_by_label']['sharp']*100:.0f}% of the "sharp" ones. The tool's first job is to replace that label with a probability.</p>
+<h3>Removing luck: the prior the tool ships with</h3>
+<p>Nonparametric empirical-Bayes deconvolution over all wallets with 2+ trades recovers the distribution of true edge in the population: 91% of wallets within ±1¢ per share of zero, thin tails either side. That distribution ships with the tool as its reference prior. Each wallet's posterior probability of positive edge becomes the denoised target for everything below.</p>
+<h3>Does the denoised target mean anything? Behavior should predict it</h3>
+{grouped_auc()}
+<div class="cap"><strong>Figure 2.</strong> Five-fold cross-validated AUC of a gradient-boosted model on 27 behavior-only features (nothing derived from profit). Same features, same wallets, three targets.</div>
+<p>Behavior predicts the denoised target at {a20:.2f} / {a50:.2f} / {auc['n>=100 | denoised skill']['auc']:.2f} for wallets with 20 / 50 / 100+ trades; the same model on the given label scores 0.68 / 0.67 / 0.66 and on raw profit 0.72 / 0.70 / 0.69. The target, not the features, was the problem.</p>
+{importance()}
+<div class="cap"><strong>Figure 3.</strong> What the model uses. Bet-size dispersion is {attr.importance.iloc[0]/attr.importance.iloc[1]:.1f}× more important than anything else — which is why the evaluator reports a sizing front.</div>
+<h3>Checked against real money</h3>
+{deciles()}
+<div class="cap"><strong>Figure 4.</strong> Wallets with 50+ trades sorted into deciles by out-of-fold predicted skill; bars are realized profit per dollar. Only the top decile is positive ({top.c_per_dollar:+.2f}¢/$, {pct(top.frac_profitable,0)} profitable, ${top.notional_M:,.0f}M notional); deciles 4–8 lose 2–7¢/$.</div>
+
+<h2>What SIF can do with it</h2>
 <ul>
 <li><strong>Grade any track record before trusting it</strong> — a wallet to copy, a member's account, a backtest, the live book — with one command and the same yardstick.</li>
 <li><strong>Decide on evidence, not on a good quarter.</strong> The tool turns "up 6% this year" into "P(real) = {rep1y['p_positive']:.0%}, ~{yrs:.0f} years to prove." That is the number that should sit next to any decision to add capital.</li>
