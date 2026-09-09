@@ -1,5 +1,5 @@
 """Build the ML memo page (v3): out-of-fold skill scores, SVG figures, published as its own artifact."""
-import json, re, sys, numpy as np, pandas as pd
+import json, re, sys, math, numpy as np, pandas as pd
 from common import load
 sys.path.insert(0, "/Users/advaymonga/Desktop/sif/sif-application-fall-2026")
 from trackrecord import evaluate, from_wallet_row, from_trades
@@ -61,6 +61,26 @@ def deciles():
     o.append(f'<text x="{L}" y="{H-2}" class="tick">← predicted least skilled</text><text x="{W-16}" y="{H-2}" class="tick" text-anchor="end">predicted most skilled →</text>')
     return "".join(o) + "</svg>"
 
+def cone_svg():
+    """SIF Live 1Y equity (indexed to 100) inside the band a zero-edge strategy with the same daily volatility would produce."""
+    h = SL["history"]["1Y"]; eq = pd.Series(h["equity"], index=pd.to_datetime(h["timestamps"], unit="s")); idx = 100 * eq.values / eq.values[0]
+    r = eq.pct_change().dropna().values; sd = r.std(ddof=1); n = len(idx); t = np.arange(n)
+    W, H, L, R, T, B = 820, 360, 54, 70, 26, 40; ymin, ymax = min(idx.min(), 100 - 2.2 * 100 * sd * math.sqrt(n)) - 1, max(idx.max(), 100 + 2.2 * 100 * sd * math.sqrt(n)) + 1
+    xs = lambda i: L + (W - L - R) * i / (n - 1); ys = lambda v: T + (H - T - B) * (ymax - v) / (ymax - ymin)
+    band = lambda z: (100 + z * 100 * sd * np.sqrt(t), 100 - z * 100 * sd * np.sqrt(t))
+    def poly(up, lo, cls): return f'<polygon class="{cls}" points="' + " ".join(f"{xs(i):.1f},{ys(up[i]):.1f}" for i in range(n)) + " " + " ".join(f"{xs(i):.1f},{ys(lo[i]):.1f}" for i in range(n - 1, -1, -1)) + '"/>'
+    o = [f'<svg viewBox="0 0 {W} {H}" class="chart" role="img" aria-label="SIF Live equity inside the zero-edge band">']
+    for v in range(int(ymin) // 5 * 5, int(ymax) + 5, 5):
+        if ymin < v < ymax: o.append(f'<line x1="{L}" x2="{W-R}" y1="{ys(v):.1f}" y2="{ys(v):.1f}" class="grid"/><text x="{L-8}" y="{ys(v)+4:.1f}" class="tick" text-anchor="end">{v}</text>')
+    u2, l2 = band(1.96); u1, l1 = band(1.0); o.append(poly(u2, l2, "cone")); o.append(poly(u1, l1, "cone2"))
+    o.append(f'<line x1="{L}" x2="{W-R}" y1="{ys(100):.1f}" y2="{ys(100):.1f}" class="zero"/>')
+    o.append('<polyline class="eq" points="' + " ".join(f"{xs(i):.1f},{ys(idx[i]):.1f}" for i in range(n)) + '"/>')
+    o.append(f'<text x="{W-R+6}" y="{ys(idx[-1])+4:.1f}" class="lbl accent">{idx[-1]-100:+.1f}%</text>')
+    o.append(f'<text x="{W-R+6}" y="{ys(u2[-1])+4:.1f}" class="lbl muted">+{u2[-1]-100:.0f}%</text><text x="{W-R+6}" y="{ys(l2[-1])+4:.1f}" class="lbl muted">{l2[-1]-100:.0f}%</text>')
+    o.append(f'<text x="{xs(int(n*0.55))}" y="{ys(u2[int(n*0.55)])-8:.1f}" class="tick" text-anchor="middle">95% of zero-edge strategies with this volatility end inside the shaded band</text>')
+    for k in range(0, n, 50): o.append(f'<text x="{xs(k):.1f}" y="{H-12}" class="tick" text-anchor="middle">{eq.index[k].strftime("%b %y")}</text>')
+    o.append(f'<line x1="{L}" x2="{W-R}" y1="{H-B}" y2="{H-B}" class="axis"/></svg>'); return "".join(o)
+
 def umap_svg():
     U = np.load(OUT + "active_umap.npy"); C = pd.read_parquet(OUT + "active_clusters.parquet"); A = df[df.n >= 20].reset_index(drop=True)
     grp = {0: "machines", 11: "machines", 3: "farms", 13: "farms", 14: "farms", 8: "bust", 10: "bust"}; g = C.cluster.map(grp).fillna("retail")
@@ -99,13 +119,43 @@ summary_rows = srow("biggest winner in the file", "0x2728d99B2405a52db60160837E1
                f"<tr><td>SIF Live, 1Y (returns mode)</td><td>{rep1y['n_periods']} days</td><td>{rep1y['annualized_return']:+.1%}/yr</td><td>Sharpe {rep1y['sharpe']:.2f}</td><td>{rep1y['p_positive']:.0%}</td><td>{rep1y['verdict'].split(':')[0]}</td></tr>" + \
                f"<tr><td>SIF Live, 3M (returns mode)</td><td>{rep3m['n_periods']} days</td><td>{rep3m['annualized_return']:+.1%}/yr</td><td>Sharpe {rep3m['sharpe']:.2f}</td><td>{rep3m['p_positive']:.0%}</td><td>{rep3m['verdict'].split(':')[0]}</td></tr>"
 
-page = f"""<title>SIF Application, Fall 2026 (v3)</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-{css}
-<style>pre.card{{background:var(--card);border-radius:6px;padding:12px 14px;font:12.5px/1.5 "IBM Plex Mono",ui-monospace,Menlo,monospace;overflow-x:auto;white-space:pre-wrap;margin:0 0 6px;color:var(--ink)}} .chart .ref2{{fill:var(--muted);opacity:.55}} .chart rect.loss{{fill:var(--loss)}} .chart .p-farm{{fill:#eda100}} .chart .p-bust{{fill:var(--loss)}}</style>
+page = f"""<title>SIF Application, Fall 2026</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&family=Poppins:wght@300;400;500;700&display=swap">
+<style>
+:root{--sif-red:#8f151d;--sif-red-dark:#651016;--ink:#151515;--muted:#747474;--line:#dedede;--soft-line:#eeeeee;--paper:#ffffff;--wash:#f7f5f2;--positive:#1a8a52;--negative:#c0392b;--gold:#b8860b;--font-num:"JetBrains Mono",monospace;--font-ui:"Inter",system-ui,sans-serif}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--sif-red:#b8202a;--sif-red-dark:#8f151d;--ink:#e8e4df;--muted:#909090;--line:#2a2a2a;--soft-line:#222222;--paper:#1e1b18;--wash:#141210;--positive:#3fb87f;--negative:#d8584f;--gold:#d4a017}}
+:root[data-theme="dark"]{--sif-red:#b8202a;--sif-red-dark:#8f151d;--ink:#e8e4df;--muted:#909090;--line:#2a2a2a;--soft-line:#222222;--paper:#1e1b18;--wash:#141210;--positive:#3fb87f;--negative:#d8584f;--gold:#d4a017}
+*{box-sizing:border-box} body{margin:0;font-family:'Poppins',Arial,Helvetica,sans-serif;color:var(--ink);background:linear-gradient(180deg,rgba(143,21,29,.08),rgba(143,21,29,0) 190px),var(--wash);font-size:15.5px;line-height:1.55}
+.wrap{max-width:980px;margin:0 auto;padding:34px 32px 60px}
+.topbar{padding-bottom:18px;margin-bottom:26px;border-bottom:2px solid var(--sif-red)}
+.kicker{color:var(--sif-red);font-size:.72rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;margin:0 0 6px}
+h1{font-size:clamp(2rem,5vw,3.4rem);line-height:1;font-weight:500;margin:0 0 10px;letter-spacing:0}
+.sub{color:var(--muted);font-size:.9rem;margin:0}
+h2{font-size:1.15rem;font-weight:700;letter-spacing:.02em;margin:40px 0 12px;padding-left:12px;border-left:4px solid var(--sif-red)}
+h3{font-size:.95rem;font-weight:500;margin:24px 0 8px}
+p{margin:0 0 12px} ul{margin:0 0 12px;padding-left:22px} li{margin-bottom:6px} strong{font-weight:600}
+ul.lede{list-style:none;padding:0;margin:6px 0 16px} ul.lede li{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--sif-red);padding:12px 14px;margin:0 0 10px}
+a{color:var(--sif-red);text-decoration:none;border-bottom:1px solid transparent} a:hover,a:focus-visible{border-bottom-color:var(--sif-red);outline:none}
+.chart{width:100%;height:auto;display:block;margin:14px 0 6px;background:var(--paper);border:1px solid var(--line);font-family:var(--font-ui)}
+.chart .grid{stroke:var(--soft-line);stroke-width:1} .chart .axis{stroke:var(--line);stroke-width:1} .chart .tick{fill:var(--muted);font-size:12px}
+.chart .lbl{fill:var(--ink);font-size:12.5px} .chart .lbl.strong{fill:var(--ink);font-weight:600} .chart .lbl.accent{fill:var(--sif-red);font-weight:600} .chart .lbl.loss{fill:var(--negative);font-weight:600} .chart .lbl.muted{fill:var(--muted)}
+.chart .ref{fill:var(--muted)} .chart .ref2{fill:var(--line)} .chart .acc{fill:var(--sif-red);stroke:var(--paper);stroke-width:2} .chart .ci{stroke:var(--sif-red);stroke-width:2} .chart .gap{stroke:var(--muted);stroke-width:1.5;stroke-dasharray:3 3}
+.chart .bar{fill:var(--sif-red)} .chart rect.loss{fill:var(--negative)} .chart .p-farm{fill:var(--gold)} .chart .p-bust{fill:var(--negative)} .chart .mark:hover .bar,.chart .mark:hover .acc{filter:brightness(1.15)} .chart .mark{cursor:default}
+.chart .cone{fill:var(--muted);opacity:.14} .chart .cone2{fill:var(--muted);opacity:.10} .chart .eq{fill:none;stroke:var(--sif-red);stroke-width:2.2;stroke-linejoin:round} .chart .zero{stroke:var(--ink);stroke-width:1;stroke-dasharray:4 4;opacity:.5}
+.cap{color:var(--muted);font-size:.8rem;margin:0 0 18px;line-height:1.45}
+.tw{overflow-x:auto;margin:8px 0 18px;background:var(--paper);border:1px solid var(--line)} table{border-collapse:collapse;width:100%;font-family:var(--font-ui);font-size:.82rem;font-variant-numeric:tabular-nums}
+th,td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--soft-line);white-space:nowrap} th{color:var(--sif-red);font-weight:700;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;border-bottom:1px solid var(--line)}
+td:first-child,th:first-child{text-align:left;white-space:normal} td{font-family:var(--font-num)} td:first-child{font-family:var(--font-ui)}
+pre.card{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--sif-red);padding:12px 14px;font:12.5px/1.5 var(--font-num);overflow-x:auto;white-space:pre-wrap;margin:0 0 8px;color:var(--ink)}
+.small{font-size:.82rem;color:var(--muted)} code{font-family:var(--font-num);font-size:.85em;background:var(--paper);border:1px solid var(--soft-line);padding:1px 5px}
+@media (prefers-reduced-motion: reduce){*{transition:none}}
+</style>
 <div class="wrap">
-<h1>SIF Application, Fall 2026</h1>
-<p class="sub">Advay Monga · An evaluator that answers "is this track record skill or luck?", built from 604,578 Polymarket wallets and pointed at the census and at SIF Live.</p>
+<div class="topbar"><p class="kicker">Smith Investment Fund · Application · Fall 2026</p><h1>Is a track record skill, or luck?</h1>
+<p class="sub">Advay Monga · An evaluator built from 604,578 Polymarket wallets, pointed at the census and at SIF Live.</p></div>
+
+{cone_svg()}
+<div class="cap"><strong>SIF Live, one year of daily equity, indexed to 100.</strong> The shaded band is where a strategy with <em>zero</em> true edge and the same daily volatility would end up (68% inner, 95% outer). SIF Live finished at {100*(rep1y['annualized_return']/252*rep1y['n_periods']):+.1f}% — inside the band. Fine result; not yet evidence.</div>
 
 <h2>Results: SIF Live</h2>
 <p>The club's dashboard publishes its paper account's daily equity (dollar-neutral cross-sectional mean reversion; {pos_n} open positions on 8 Sep 2026, ${gross:,.0f} gross, ${net:+,.0f} net). Run through the evaluator:</p>
