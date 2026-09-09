@@ -31,5 +31,5 @@ Env: `.venv` (Python 3.12; pandas, pyarrow, numpy, scipy, scikit-learn, matplotl
 ## Run order
 Skill/crowd memo: `skill_luck.py` → `crowd.py` → `figures.py` → `memo.py`. Two-Exploits memo: `edge.py` → `figures_edge.py` → `memo_edge.py`. Run from `analysis/` with `../.venv/bin/python`.
 
-## Report thesis
-Two questions, one dataset: how much *skill* exists (vs luck) and how *wrong* the crowd is. Dataset-only; external data for comparison only.
+## Report thesis (current)
+Submission = the ML memo (`ml_page.py` → artifact f3f1c3d8…, PDF in `deliverables/SIF_Application_Fall_2026.pdf`): skill is predictable from behavior (AUC 0.90) only after luck is removed from the target; bet-size dispersion is the top tell; `trackrecord` is the appendix. Earlier memos (skill/crowd, Two Exploits, One Bot) are kept as alternates. Dataset-only; external facts for context only.
