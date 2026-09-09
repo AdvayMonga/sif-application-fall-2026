@@ -2,6 +2,7 @@
 import argparse, json, math, sys, pandas as pd
 from .core import evaluate
 from .features import from_trades, from_wallet_row
+from .returns import evaluate_returns, card_returns
 
 def card(rep):
     a, p, q = rep["inputs"], rep["posterior"], rep["percentiles_vs_active_wallets"]; c = lambda x: f"{100*x:+.2f}¢"
@@ -20,7 +21,11 @@ def main(argv=None):
     ap = argparse.ArgumentParser(prog="trackrecord"); sub = ap.add_subparsers(dest="cmd", required=True)
     e = sub.add_parser("eval", help="evaluate a CSV of trades (price,size,won[,pnl])"); e.add_argument("csv"); e.add_argument("--json", action="store_true")
     w = sub.add_parser("wallet", help="evaluate a wallet address from the SIF parquet"); w.add_argument("address"); w.add_argument("--data", default="data.parquet"); w.add_argument("--json", action="store_true")
+    r = sub.add_parser("returns", help="evaluate a series of per-period returns (CSV with a 'return' column, or portfolio 'value' column)"); r.add_argument("csv"); r.add_argument("--periods-per-year", type=int, default=252); r.add_argument("--json", action="store_true")
     a = ap.parse_args(argv)
+    if a.cmd == "returns":
+        d = pd.read_csv(a.csv); ret = d["return"] if "return" in d else d["value"].pct_change().dropna()
+        rep = evaluate_returns(ret, a.periods_per_year); print(json.dumps(rep, indent=1, default=str) if a.json else card_returns(rep, "day" if a.periods_per_year == 252 else "period")); return
     if a.cmd == "eval": agg = from_trades(pd.read_csv(a.csv))
     else:
         df = pd.read_parquet(a.data); row = df[df.trader.str.lower() == a.address.lower()]

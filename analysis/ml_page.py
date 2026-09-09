@@ -4,6 +4,7 @@ from common import load
 sys.path.insert(0, "/Users/advaymonga/Desktop/sif/sif-application-fall-2026")
 from trackrecord import evaluate, from_wallet_row, from_trades
 from trackrecord.cli import card
+from trackrecord.returns import evaluate_returns, card_returns
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.model_selection import StratifiedKFold
 OUT = "/Users/advaymonga/Desktop/sif/sif-application-fall-2026/analysis/out/ml/"; ROOT = "/Users/advaymonga/Desktop/sif/sif-application-fall-2026/analysis/out/"
@@ -80,7 +81,12 @@ def rc(addr, title):
     row = df[df.trader.str.lower() == addr.lower()].iloc[0]; return f'<p class="small" style="margin:14px 0 4px"><strong>{title}</strong></p><pre class="card">{card(evaluate(from_wallet_row(row)))}</pre>'
 cards = rc("0x2728d99B2405a52db60160837E130B3ba3c1A83c", "The biggest winner in the file") + rc("0x99C538dB47a2cBc0A56EbF465309d678a6f7d406", "A one-trade wallet the dataset labels \"sharp\"") + \
         rc(df[(df.n >= 50) & (df.trader_label == "sharp")].sort_values("trader_pnl").iloc[len(df[(df.n >= 50) & (df.trader_label == "sharp")]) // 2].trader, "A typical 50+-trade wallet labeled \"sharp\"") + \
-        f'<p class="small" style="margin:14px 0 4px"><strong>The example CSV shipped with the tool</strong> (synthetic, 60 trades)</p><pre class="card">{card(evaluate(from_trades(pd.read_csv("/Users/advaymonga/Desktop/sif/sif-application-fall-2026/examples/sample_trades.csv"))))}</pre>' 
+        f'<p class="small" style="margin:14px 0 4px"><strong>The example CSV shipped with the tool</strong> (synthetic, 60 trades)</p><pre class="card">{card(evaluate(from_trades(pd.read_csv("/Users/advaymonga/Desktop/sif/sif-application-fall-2026/examples/sample_trades.csv"))))}</pre>'
+SL = json.load(open("/Users/advaymonga/Desktop/sif/sif-application-fall-2026/deliverables/siflive_dashboard_2026-09-08.json"))
+def sl(k):
+    h = SL["history"][k]; eq = pd.Series(h["equity"], index=pd.to_datetime(h["timestamps"], unit="s")); r = eq.pct_change().dropna(); rep = evaluate_returns(r.values)
+    return rep, f'<p class="small" style="margin:14px 0 4px"><strong>SIF Live, {k} window</strong> ({eq.index[0].date()} → {eq.index[-1].date()}, ${eq.iloc[0]:,.0f} → ${eq.iloc[-1]:,.0f})</p><pre class="card">{card_returns(rep, "day")}</pre>'
+rep1y, card1y = sl("1Y"); _, card3m = sl("3M"); yrs = rep1y["periods_needed_for_95pct"] / 252
 
 page = f"""<title>SIF Application, Fall 2026 (v3)</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -143,6 +149,7 @@ page = f"""<title>SIF Application, Fall 2026 (v3)</title>
 <li><strong>Grade any track record before trusting it.</strong> The luck-removal step is the part a fund would actually use: it turns "up 15% this semester" into "P(real edge) = 0.31, {{n}} more trades needed." I packaged it as a small tool (appendix) that takes a CSV of trades or any wallet address.</li>
 <li><strong>Vet wallets before copying them.</strong> The addresses in this file are public and their trades are on-chain. Score a wallet on behavior, check its luck-adjusted edge, and only then consider following it. The forward test — do the top-decile wallets stay profitable after March 2025 — is the one thing this file cannot answer and the first thing to run with live data.</li>
 <li><strong>Watch sizing before P&amp;L.</strong> Bet-size dispersion is visible after a dozen trades and needs no outcomes. A member or a strategy that sizes every bet the same is showing the population's coin-flipper signature early.</li>
+<li><strong>Grade SIF Live itself.</strong> The club's public dashboard publishes its paper account's daily equity. Run through the same harness (appendix), the 1-year record is {rep1y['annualized_return']:+.1%} annualized at Sharpe {rep1y['sharpe']:.2f}: P(true mean return &gt; 0) = {rep1y['p_positive']:.0%}, and at this Sharpe it would take about {yrs:.0f} years of trading to be 95% sure the strategy makes money. That is not a criticism of the strategy. It is the honest size of the evidence, and it is the number a fund should know before it scales.</li>
 <li><strong>Know where the money actually is.</strong> Two machine clusters hold the profits. Retail loses on average; the only zero-loss humans are the reward farmers taking no risk. "Sharp retail" is mostly a label artifact.</li>
 </ul>
 
@@ -156,6 +163,9 @@ page = f"""<title>SIF Application, Fall 2026 (v3)</title>
 <h2>Appendix — the eval harness</h2>
 <p>A small Python package, <code>trackrecord</code>, that runs the same evaluation on any record. Input is a CSV of trades (price, size, won) or a wallet address from the census. It treats the record as true edge plus noise, uses the census's own recovered distribution of edge as the prior, and reports the luck-adjusted edge, its interval, a verdict, how many more trades would be needed for proof, and percentiles against the 124,064 active wallets. Six tests, one 16 KB reference file, no data dependency. Four real report cards:</p>
 {cards}
+<p>The same tool has a returns mode for any P&amp;L series — a live book, a backtest, a member's account. Applied to SIF Live's published equity curve (dollar-neutral cross-sectional mean reversion, paper account, 103 open positions on 8 Sep 2026):</p>
+{card1y}{card3m}
+<p class="small">Reading it: a Sharpe of about 0.5 is a perfectly respectable live result and also, over one year, indistinguishable from zero. The 95% band on the annual return runs from roughly −18% to +31%. The harness turns that into the one number that matters for a fund deciding whether to add capital: how much more track record it needs.</p>
 <p class="small">Repository: <code>sif-application-fall-2026/</code> — <code>trackrecord/</code> (tool), <code>analysis/</code> (everything above), <code>tests/</code>, <code>README.md</code>.</p>
 
 <h2>Method</h2>

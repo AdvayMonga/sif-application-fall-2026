@@ -23,3 +23,13 @@ def test_from_trades_resolution_payoff():
 
 def test_reference_prior_is_a_distribution():
     ref = load_reference(); assert abs(sum(ref["prior"]) - 1) < 1e-6 and len(ref["grid"]) == len(ref["prior"])
+
+def test_returns_mode_needs_more_data_for_modest_sharpe():
+    from trackrecord.returns import evaluate_returns
+    rng = np.random.default_rng(0); r = rng.normal(0.0004, 0.01, 60)          # ~Sharpe 0.6, 60 days
+    rep = evaluate_returns(r); assert "unproven" in rep["verdict"] and rep["periods_needed_for_95pct"] > 60
+
+def test_returns_mode_recognizes_strong_record():
+    from trackrecord.returns import evaluate_returns
+    rng = np.random.default_rng(1); r = rng.normal(0.002, 0.01, 500)
+    rep = evaluate_returns(r); assert rep["p_positive"] > 0.95 and "skilled" in rep["verdict"]
