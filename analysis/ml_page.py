@@ -86,7 +86,15 @@ SL = json.load(open("/Users/advaymonga/Desktop/sif/sif-application-fall-2026/del
 def sl(k):
     h = SL["history"][k]; eq = pd.Series(h["equity"], index=pd.to_datetime(h["timestamps"], unit="s")); r = eq.pct_change().dropna(); rep = evaluate_returns(r.values)
     return rep, f'<p class="small" style="margin:14px 0 4px"><strong>SIF Live, {k} window</strong> ({eq.index[0].date()} → {eq.index[-1].date()}, ${eq.iloc[0]:,.0f} → ${eq.iloc[-1]:,.0f})</p><pre class="card">{card_returns(rep, "day")}</pre>'
-rep1y, card1y = sl("1Y"); _, card3m = sl("3M"); yrs = rep1y["periods_needed_for_95pct"] / 252
+rep1y, card1y = sl("1Y"); rep3m, card3m = sl("3M"); yrs = rep1y["periods_needed_for_95pct"] / 252
+def srow(name, addr=None, trades_df=None):
+    agg = from_wallet_row(df[df.trader.str.lower() == addr.lower()].iloc[0]) if addr else from_trades(trades_df); rp = evaluate(agg); p = rp["posterior"]
+    return f"<tr><td>{name}</td><td>{agg['n']:,}</td><td>{100*agg['edge_per_share']:+.1f}¢/sh</td><td>{100*p['mean']:+.2f}¢/sh</td><td>{p['p_meaningful_positive']:.0%}</td><td>{rp['verdict'].split(':')[0]}</td></tr>"
+mid_sharp = df[(df.n >= 50) & (df.trader_label == "sharp")].sort_values("trader_pnl"); mid_addr = mid_sharp.iloc[len(mid_sharp) // 2].trader
+summary_rows = srow("biggest winner in the file", "0x2728d99B2405a52db60160837E130B3ba3c1A83c") + srow('one-trade wallet labeled "sharp"', "0x99C538dB47a2cBc0A56EbF465309d678a6f7d406") + srow('typical 50+-trade wallet labeled "sharp"', mid_addr) + \
+               srow("example CSV (synthetic)", trades_df=pd.read_csv("/Users/advaymonga/Desktop/sif/sif-application-fall-2026/examples/sample_trades.csv")) + \
+               f"<tr><td>SIF Live, 1Y (returns mode)</td><td>{rep1y['n_periods']} days</td><td>{rep1y['annualized_return']:+.1%}/yr</td><td>Sharpe {rep1y['sharpe']:.2f}</td><td>{rep1y['p_positive']:.0%}</td><td>{rep1y['verdict'].split(':')[0]}</td></tr>" + \
+               f"<tr><td>SIF Live, 3M (returns mode)</td><td>{rep3m['n_periods']} days</td><td>{rep3m['annualized_return']:+.1%}/yr</td><td>Sharpe {rep3m['sharpe']:.2f}</td><td>{rep3m['p_positive']:.0%}</td><td>{rep3m['verdict'].split(':')[0]}</td></tr>"
 
 page = f"""<title>SIF Application, Fall 2026 (v3)</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -101,6 +109,7 @@ page = f"""<title>SIF Application, Fall 2026 (v3)</title>
 <li><strong>You can tell a skilled trader from a lucky one just by watching how they behave — no profit data needed.</strong> A model on behavior alone separates skilled from unskilled wallets with AUC {a50:.2f}.</li>
 <li><strong>But only if you first remove luck from the scoreboard.</strong> Point the same model at the dataset's own "sharp / awful" label and it scores {r50:.2f}. The label is mostly luck, so there is nothing to learn.</li>
 <li><strong>The biggest tell is bet sizing.</strong> Skilled wallets bet big when convinced and small otherwise. Coin-flippers bet the same amount every time.</li>
+<li><strong>The luck-removal step is reusable.</strong> I packaged it as a small tool that grades any track record — a wallet, a CSV of trades, or a daily P&amp;L series — and ran it on SIF Live's own book (appendix).</li>
 </ul>
 <div class="kpi">
  <div><b>{a50:.2f}</b><span>AUC predicting skill from behavior (50+ trades)</span></div>
@@ -163,6 +172,8 @@ page = f"""<title>SIF Application, Fall 2026 (v3)</title>
 <h2>Appendix — the eval harness</h2>
 <p>A small Python package, <code>trackrecord</code>, that runs the same evaluation on any record. Input is a CSV of trades (price, size, won) or a wallet address from the census. It treats the record as true edge plus noise, uses the census's own recovered distribution of edge as the prior, and reports the luck-adjusted edge, its interval, a verdict, how many more trades would be needed for proof, and percentiles against the 124,064 active wallets. Six tests, one 16 KB reference file, no data dependency. Four real report cards:</p>
 {cards}
+<p class="small"><strong>How to read a card.</strong> <em>Realized edge</em> is what happened. <em>Luck-adjusted edge</em> is the posterior mean after shrinking toward the population — the best guess of true skill. <em>P(edge &gt; +0.5¢)</em> is the probability the record reflects real, meaningful edge. <em>Trades for 95% proof</em> is how much more record it would take at the current pace. Percentiles compare against the 124,064 wallets with 20+ trades.</p>
+<div class="tw"><table><thead><tr><th>record</th><th>trades</th><th>realized edge</th><th>luck-adjusted</th><th>P(real edge)</th><th>verdict</th></tr></thead><tbody>{summary_rows}</tbody></table></div>
 <p>The same tool has a returns mode for any P&amp;L series — a live book, a backtest, a member's account. Applied to SIF Live's published equity curve (dollar-neutral cross-sectional mean reversion, paper account, 103 open positions on 8 Sep 2026):</p>
 {card1y}{card3m}
 <p class="small">Reading it: a Sharpe of about 0.5 is a perfectly respectable live result and also, over one year, indistinguishable from zero. The 95% band on the annual return runs from roughly −18% to +31%. The harness turns that into the one number that matters for a fund deciding whether to add capital: how much more track record it needs.</p>

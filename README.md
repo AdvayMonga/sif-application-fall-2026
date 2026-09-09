@@ -19,6 +19,7 @@ Data (`data.parquet`), generated outputs (`analysis/out/`) and report deliverabl
 python -m trackrecord eval examples/sample_trades.csv          # a CSV of trades: price, size (dollars), won (0/1) [, pnl]
 python -m trackrecord wallet 0x2728d99B... --data data.parquet  # any wallet in the census
 python -m trackrecord returns equity.csv                       # any P&L series: a "return" column, or a "value" column (portfolio equity)
+python -m trackrecord returns examples/sample_portfolio_values.csv
 python -m trackrecord eval trades.csv --json                    # machine-readable
 ```
 
