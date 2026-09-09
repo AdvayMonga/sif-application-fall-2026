@@ -151,11 +151,11 @@ pre.card{{background:var(--paper);border:1px solid var(--line);border-left:4px s
 @media (prefers-reduced-motion: reduce){{*{{transition:none}}}}
 </style>
 <div class="wrap">
-<div class="topbar"><p class="kicker">Smith Investment Fund · Application · Fall 2026</p><h1>Is a track record skill, or luck?</h1>
+<div class="topbar"><p class="kicker">Smith Investment Fund · Is a track record skill, or luck?</p><h1>SIF Application, Fall 2026</h1>
 <p class="sub">Advay Monga · An evaluator built from 604,578 Polymarket wallets, pointed at the census and at SIF Live.</p></div>
 
 {cone_svg()}
-<div class="cap"><strong>SIF Live, one year of daily equity, indexed to 100.</strong> The shaded band is where a strategy with <em>zero</em> true edge and the same daily volatility would end up (68% inner, 95% outer). SIF Live finished at {100*(rep1y['annualized_return']/252*rep1y['n_periods']):+.1f}% — inside the band. Fine result; not yet evidence.</div>
+<div class="cap"><strong>SIF Live, one year of daily equity, indexed to 100.</strong> The shaded band is where a strategy with <em>zero</em> true edge and the same daily volatility would end up (68% inner, 95% outer). SIF Live finished at {100*(SL['history']['1Y']['equity'][-1]/SL['history']['1Y']['equity'][0]-1):+.1f}% — inside the band. Fine result; not yet evidence.</div>
 
 <h2>Results: SIF Live</h2>
 <p>The club's dashboard publishes its paper account's daily equity (dollar-neutral cross-sectional mean reversion; {pos_n} open positions on 8 Sep 2026, ${gross:,.0f} gross, ${net:+,.0f} net). Run through the evaluator:</p>
