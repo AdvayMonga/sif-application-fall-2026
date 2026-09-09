@@ -33,3 +33,13 @@ def test_returns_mode_recognizes_strong_record():
     from trackrecord.returns import evaluate_returns
     rng = np.random.default_rng(1); r = rng.normal(0.002, 0.01, 500)
     rep = evaluate_returns(r); assert rep["p_positive"] > 0.95 and "skilled" in rep["verdict"]
+
+def test_extra_fronts_run_and_flag_concentration():
+    from trackrecord.diagnostics import extra_fronts
+    t = pd.DataFrame({"price": [0.5]*20, "size": [10]*19 + [1000], "won": [0]*10 + [1]*10})
+    x = extra_fronts(t); assert x["concentration"]["best_trade_share"] > 0.9 and x["sizing"]["sizing_gain_c_per_dollar"] > 0 and x["risk"]["longest_losing_streak"] == 10
+
+def test_returns_benchmark_beta():
+    from trackrecord.returns import evaluate_returns
+    rng = np.random.default_rng(2); b = rng.normal(0.0004, 0.01, 300); r = 0.5 * b + rng.normal(0, 0.002, 300)
+    rep = evaluate_returns(r, benchmark=b); assert 0.4 < rep["beta"] < 0.6 and "p_50pct_drawdown_next_year" in rep

@@ -35,6 +35,8 @@ TRACK RECORD  ·  2,072 trades  ·  $2,501,000 wagered  ·  P&L $+1,103,256
   vs 124,064 active wallets:  edge/$ 99th pct  ·  sizing dispersion 99th pct  ·  trades 99th pct
 ```
 
+Beyond the headline verdict, `eval` also reports **calibration** (win rate vs price, Brier vs the price itself), **sizing value** (size-weighted vs equal-weighted return — did bigger bets do better?), **concentration** (best trade's share of P&L, P&L without the top 3, bootstrap CI on total P&L), **persistence** (first half vs second half) and **risk** (max drawdown, longest losing streak vs chance, Monte-Carlo drawdown probability at 5% of bankroll per bet). `returns` adds split-half Sharpe, losing-streak vs chance, lag-1 autocorrelation, next-year drawdown probabilities, and alpha/beta if the CSV has a `benchmark` (return) or `benchmark_value` column.
+
 Returns mode grades a series of per-period returns with a plain t-test (flat prior): annualized return with a 95% band, Sharpe, P(true mean > 0), and how many more periods are needed for 95% significance at the current Sharpe.
 
 How it works: every record is treated as *true edge + noise*, where the noise shrinks with the number of trades and depends on the prices traded (variance ≈ 0.87·p(1−p)/n, calibrated on 75k resolved single bets). The prior over true edge is the population's own distribution, recovered by nonparametric empirical Bayes from the census (`analysis/skill_luck.py`) and shipped as `trackrecord/reference.json`. The posterior gives the luck-adjusted edge, its interval, and how many more trades would be needed before the observed edge is distinguishable from luck.

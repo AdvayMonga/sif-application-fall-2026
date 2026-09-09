@@ -3,6 +3,17 @@ import argparse, json, math, sys, pandas as pd
 from .core import evaluate
 from .features import from_trades, from_wallet_row
 from .returns import evaluate_returns, card_returns
+from .diagnostics import extra_fronts
+
+def card_extra(x):
+    cal, sz, con, per, rk = x["calibration"], x["sizing"], x["concentration"], x["persistence"], x["risk"]; L = []
+    if cal: L.append(f"  calibration           win rate − price {cal['win_minus_price_pts']:+.1f} pts   ·   Brier vs price {cal['brier_price']:.3f}  (constant {cal['brier_constant']:.3f})")
+    L.append(f"  sizing value          size-weighted {100*sz['size_weighted_return']:+.1f}¢/$ vs equal-weighted {100*sz['equal_weighted_return']:+.1f}¢/$  →  sizing {'added' if sz['sizing_gain_c_per_dollar']>0 else 'cost'} {abs(sz['sizing_gain_c_per_dollar']):.1f}¢/$")
+    bt = f"best trade = {con['best_trade_share']:.0%} of P&L   ·   " if con["best_trade_share"] is not None else ""
+    L.append(f"  concentration         {bt}without top 3: ${con['pnl_without_top3']:+,.0f}   ·   bootstrap 90% CI on P&L [${con['pnl_ci90'][0]:+,.0f}, ${con['pnl_ci90'][1]:+,.0f}]")
+    if per: L.append(f"  persistence           first half {100*per['first_half_return']:+.1f}¢/$ · second half {100*per['second_half_return']:+.1f}¢/$")
+    L.append(f"  risk                  max drawdown {rk['max_drawdown_of_stake']:.1%} of stake   ·   longest losing streak {rk['longest_losing_streak']} (expected ≈{rk['expected_longest_streak']:.0f})   ·   P(−20%) {rk['p_20pct_drawdown_next_horizon']:.0%} / P(−50%) {rk['p_50pct_drawdown_next_horizon']:.1%} over the same number of bets at {rk['bankroll_frac']:.0%} of bankroll per average bet")
+    return "\n".join(L)
 
 def card(rep):
     a, p, q = rep["inputs"], rep["posterior"], rep["percentiles_vs_active_wallets"]; c = lambda x: f"{100*x:+.2f}¢"
@@ -25,8 +36,11 @@ def main(argv=None):
     a = ap.parse_args(argv)
     if a.cmd == "returns":
         d = pd.read_csv(a.csv); ret = d["return"] if "return" in d else d["value"].pct_change().dropna()
-        rep = evaluate_returns(ret, a.periods_per_year); print(json.dumps(rep, indent=1, default=str) if a.json else card_returns(rep, "day" if a.periods_per_year == 252 else "period")); return
-    if a.cmd == "eval": agg = from_trades(pd.read_csv(a.csv))
+        bench = (d["benchmark"] if "benchmark" in d else d["benchmark_value"].pct_change().dropna() if "benchmark_value" in d else None)
+        rep = evaluate_returns(ret, a.periods_per_year, bench); print(json.dumps(rep, indent=1, default=str) if a.json else card_returns(rep, "day" if a.periods_per_year == 252 else "period")); return
+    if a.cmd == "eval":
+        tdf = pd.read_csv(a.csv); agg = from_trades(tdf); rep = evaluate(agg); rep["fronts"] = extra_fronts(tdf)
+        print(json.dumps(rep, indent=1, default=str) if a.json else card(rep) + "\n" + card_extra(rep["fronts"])); return
     else:
         df = pd.read_parquet(a.data); row = df[df.trader.str.lower() == a.address.lower()]
         if row.empty: sys.exit(f"wallet {a.address} not in {a.data}")

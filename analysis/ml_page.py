@@ -3,7 +3,8 @@ import json, re, sys, numpy as np, pandas as pd
 from common import load
 sys.path.insert(0, "/Users/advaymonga/Desktop/sif/sif-application-fall-2026")
 from trackrecord import evaluate, from_wallet_row, from_trades
-from trackrecord.cli import card
+from trackrecord.cli import card, card_extra
+from trackrecord.diagnostics import extra_fronts
 from trackrecord.returns import evaluate_returns, card_returns
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.model_selection import StratifiedKFold
@@ -176,6 +177,7 @@ page = f"""<title>SIF Application, Fall 2026 (v3)</title>
 <div class="tw"><table><thead><tr><th>record</th><th>trades</th><th>realized edge</th><th>luck-adjusted</th><th>P(real edge)</th><th>verdict</th></tr></thead><tbody>{summary_rows}</tbody></table></div>
 <p>The same tool has a returns mode for any P&amp;L series — a live book, a backtest, a member's account. Applied to SIF Live's published equity curve (dollar-neutral cross-sectional mean reversion, paper account, 103 open positions on 8 Sep 2026):</p>
 {card1y}{card3m}
+<p class="small">With a full trade list (the example card above) the tool also reports calibration against the price, whether sizing added or cost money, how much of the P&amp;L is one lucky trade, first-half vs second-half edge, and drawdown risk at a stated bankroll fraction. On a return series it adds split-half Sharpe, losing streaks vs chance, autocorrelation, and next-year drawdown odds.</p>
 <p class="small">Reading it: a Sharpe of about 0.5 is a perfectly respectable live result and also, over one year, indistinguishable from zero. The 95% band on the annual return runs from roughly −18% to +31%. The harness turns that into the one number that matters for a fund deciding whether to add capital: how much more track record it needs.</p>
 <p class="small">Repository: <code>sif-application-fall-2026/</code> — <code>trackrecord/</code> (tool), <code>analysis/</code> (everything above), <code>tests/</code>, <code>README.md</code>.</p>
 
