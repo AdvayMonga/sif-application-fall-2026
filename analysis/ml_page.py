@@ -116,7 +116,7 @@ def umap_svg():
     return "".join(o) + "</svg>"
 
 FAM = pd.read_csv(OUT + "cluster_eval_family.csv")
-fam_rows = "".join(f"<tr><td>{r.family}</td><td>{r.wallets:,}</td><td>${r.notional_M:,.0f}M</td><td>{r.pnl_M:+.1f}</td><td>{r.edge_per_dollar:+.2f}</td><td>{r.ci_lo:+.2f} to {r.ci_hi:+.2f}</td><td>{r.p_positive:.0%}</td><td>{"positive" if r.p_positive > .95 else ("negative" if r.p_positive < .05 else "luck")}</td></tr>" for r in FAM.itertuples())
+fam_rows = "".join(f"<tr><td>{r.family}</td><td>{r.wallets:,}</td><td>${r.notional_M:,.0f}M</td><td>{r.pnl_M:+.1f}</td><td>{r.edge_per_dollar:+.2f}</td><td>{r.p_positive:.0%}</td><td>{"positive" if r.p_positive > .95 else ("negative" if r.p_positive < .05 else "luck")}</td></tr>" for r in FAM.itertuples())
 MACH = FAM[FAM.family == "machines"].iloc[0]; FARM = FAM[FAM.family == "farm"].iloc[0]; RET = FAM[FAM.family == "retail"].iloc[0]
 CE = pd.read_csv(OUT + "cluster_eval.csv"); mach_prof = CE[CE.name.str.startswith("machines")].frac_profitable.mean()
 named = {0: "machines A", 11: "machines B", 3: "farm A", 13: "farm B", 14: "farm C", 8: "bust A", 10: "bust B"}
@@ -203,7 +203,7 @@ pre.card{{background:var(--paper);border:1px solid var(--line);border-left:4px s
 <p>The groups were formed with no profit data, so pooling each one and running it through the evaluator is a fair test of what the map found. Each cluster is treated as a single record; the interval comes from resampling its wallets, not its trades, so wallets betting on the same markets do not count as independent evidence.</p>
 {cluster_bars()}
 <div class="cap"><strong>Figure 5.</strong> Profit per dollar wagered by cluster, with 90% intervals. ✓ marks a group whose edge is positive with at least 95% confidence, ✗ negative with at least 95%.</div>
-<div class="tw"><table><thead><tr><th>group</th><th>wallets</th><th>notional</th><th>P&amp;L $M</th><th>edge ¢/$</th><th>90% interval</th><th>P(edge&gt;0)</th><th>verdict</th></tr></thead><tbody>{fam_rows}</tbody></table></div>
+<div class="tw"><table><thead><tr><th>group</th><th>wallets</th><th>notional</th><th>P&amp;L $M</th><th>edge ¢/$</th><th>P(edge&gt;0)</th><th>verdict</th></tr></thead><tbody>{fam_rows}</tbody></table></div>
 <p>The two machine clusters are the only groups with a decisively positive edge: {MACH.edge_per_dollar:+.2f}¢ per dollar on ${MACH.notional_M:,.0f}M, interval {MACH.ci_lo:+.2f} to {MACH.ci_hi:+.2f}, {MACH.pnl_M:+.1f}M in profit. The farms sit on zero ({FARM.edge_per_dollar:+.2f}¢, interval {FARM.ci_lo:+.2f} to {FARM.ci_hi:+.2f}) — expected, since their trades are constructed to carry no risk. Retail is decisively negative ({RET.edge_per_dollar:+.2f}¢, interval {RET.ci_lo:+.2f} to {RET.ci_hi:+.2f}), and the two bust clusters lose {-FAM[FAM.family == "bust"].iloc[0].edge_per_dollar:.1f}¢ per dollar.</p>
 <p>One detail worth noting: only {mach_prof:.0%} of the individual wallets inside the machine clusters are profitable, yet the group's edge is certain. A group can have a real edge while most of its members lose, and a single member can look brilliant while the group has none. That gap is the whole reason the evaluator exists.</p>
 
