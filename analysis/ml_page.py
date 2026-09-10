@@ -61,6 +61,27 @@ def deciles():
     o.append(f'<text x="{L}" y="{H-2}" class="tick">← predicted least skilled</text><text x="{W-16}" y="{H-2}" class="tick" text-anchor="end">predicted most skilled →</text>')
     return "".join(o) + "</svg>"
 
+def cluster_bars():
+    """Edge per dollar with 90% wallet-bootstrap CI, per discovered cluster."""
+    t = pd.read_csv(OUT + "cluster_eval.csv").sort_values("edge_per_dollar", ascending=False)
+    W, L, R, rowh, T = 820, 118, 96, 26, 30; H = T + rowh * len(t) + 18
+    lo, hi = min(t.ci_lo_d.min(), -8), max(t.ci_hi_d.max(), 2); span = hi - lo
+    xs = lambda v: L + (W - L - R) * (v - lo) / span
+    o = [f'<svg viewBox="0 0 {W} {H}" class="chart" role="img" aria-label="Edge per dollar by cluster with confidence intervals">']
+    for g in range(int(lo) // 2 * 2, int(hi) + 2, 2):
+        if lo < g < hi: o.append(f'<line x1="{xs(g):.1f}" x2="{xs(g):.1f}" y1="{T-6}" y2="{H-14}" class="grid"/><text x="{xs(g):.1f}" y="{T-12}" class="tick" text-anchor="middle">{g:+d}¢</text>')
+    z = xs(0); o.append(f'<line x1="{z:.1f}" x2="{z:.1f}" y1="{T-6}" y2="{H-14}" class="axis"/>')
+    for i, r in enumerate(t.itertuples()):
+        y = T + i * rowh + rowh / 2; cls = "bar" if r.edge_per_dollar >= 0 else "loss"
+        x0, x1 = (z, xs(r.edge_per_dollar)) if r.edge_per_dollar >= 0 else (xs(r.edge_per_dollar), z)
+        o.append(f'<g class="mark"><title>{r.name}: {r.edge_per_dollar:+.2f}¢ per dollar (90% CI {r.ci_lo_d:+.2f} to {r.ci_hi_d:+.2f}), {r.wallets:,} wallets, {r.trades:,} trades, ${r.notional_M:,.0f}M — {r.verdict}</title>')
+        o.append(f'<rect x="{x0:.1f}" y="{y-7:.1f}" width="{max(x1-x0,1):.1f}" height="14" class="{cls}"/>')
+        o.append(f'<line x1="{xs(r.ci_lo_d):.1f}" x2="{xs(r.ci_hi_d):.1f}" y1="{y:.1f}" y2="{y:.1f}" class="axis"/><line x1="{xs(r.ci_lo_d):.1f}" x2="{xs(r.ci_lo_d):.1f}" y1="{y-5:.1f}" y2="{y+5:.1f}" class="axis"/><line x1="{xs(r.ci_hi_d):.1f}" x2="{xs(r.ci_hi_d):.1f}" y1="{y-5:.1f}" y2="{y+5:.1f}" class="axis"/>')
+        o.append(f'<text x="{L-8}" y="{y+4:.1f}" class="lbl" text-anchor="end">{r.name}</text>')
+        star = "\u2713" if r.p_positive > .95 else ("\u2717" if r.p_positive < .05 else "")
+        o.append(f'<text x="{W-R+8}" y="{y+4:.1f}" class="lbl {"accent" if r.p_positive > .95 else ("loss" if r.p_positive < .05 else "muted")}">{r.edge_per_dollar:+.2f}¢ {star}</text></g>')
+    return "".join(o) + "</svg>"
+
 def cone_svg():
     """SIF Live 1Y equity (indexed to 100) inside the band a zero-edge strategy with the same daily volatility would produce."""
     h = SL["history"]["1Y"]; eq = pd.Series(h["equity"], index=pd.to_datetime(h["timestamps"], unit="s")); idx = 100 * eq.values / eq.values[0]
@@ -94,6 +115,10 @@ def umap_svg():
         o.append(f'<circle cx="{xpos}" cy="{H-14}" r="5" class="{k}"/><text x="{xpos+10}" y="{H-10}" class="tick">{lab}</text>')
     return "".join(o) + "</svg>"
 
+FAM = pd.read_csv(OUT + "cluster_eval_family.csv")
+fam_rows = "".join(f"<tr><td>{r.family}</td><td>{r.wallets:,}</td><td>${r.notional_M:,.0f}M</td><td>{r.pnl_M:+.1f}</td><td>{r.edge_per_dollar:+.2f}</td><td>{r.ci_lo:+.2f} to {r.ci_hi:+.2f}</td><td>{r.p_positive:.0%}</td><td>{r.verdict}</td></tr>" for r in FAM.itertuples())
+MACH = FAM[FAM.family == "machines"].iloc[0]; FARM = FAM[FAM.family == "farm"].iloc[0]; RET = FAM[FAM.family == "retail"].iloc[0]
+CE = pd.read_csv(OUT + "cluster_eval.csv"); mach_prof = CE[CE.name.str.startswith("machines")].frac_profitable.mean()
 named = {0: "machines A", 11: "machines B", 3: "farm A", 13: "farm B", 14: "farm C", 8: "bust A", 10: "bust B"}
 rows = "".join(f"<tr><td>{named.get(i, f'retail {i}')}</td><td>{int(r.wallets):,}</td><td>${r.notional_M:,.0f}M</td><td>{r.pnl_M:+.1f}</td><td>{r.c_per_dollar:+.2f}</td><td>{pct(r.frac_profitable,0)}</td><td>{int(r.median_n)}</td><td>{r.avg_price:.2f}</td><td>{pct(r.maker_share,0)}</td><td>{r.ev_zero_pnl_maker_lift:.1f}×</td><td>{r.ev_bust_lift:.1f}×</td></tr>" for i, r in ct.sort_values("pnl_M", ascending=False).iterrows())
 a20, a50 = auc["n>=20 | denoised skill"]["auc"], auc["n>=50 | denoised skill"]["auc"]; r50, p50 = auc["n>=50 | raw label sharp-vs-awful"]["auc"], auc["n>=50 | profit sign"]["auc"]
@@ -173,6 +198,14 @@ pre.card{{background:var(--paper);border:1px solid var(--line);border-left:4px s
 {cards}
 {umap_svg()}
 <div class="cap"><strong>Figure 1.</strong> The population, grouped with no labels and no profit data: the 27 behavior features are compressed to 12 numbers per wallet by an <em>autoencoder</em> (a network trained to reproduce its own input through a narrow layer, which forces it to keep only what matters), then wallets close together in that space are grouped and the groups named afterwards by what they turned out to contain (124,064 active wallets; 14,000 shown). Two clusters are the machines (${ct.loc[[0,11],'notional_M'].sum():,.0f}M notional, +${ct.loc[[0,11],'pnl_M'].sum():.1f}M); three are reward farms (zero-P&amp;L makers 3–6× over-represented); two are wallets that lost everything. Retail loses 0.1–7¢ per dollar. "Sharp retail" is mostly a label artifact.</div>
+
+<h3>Which of those groups actually has an edge?</h3>
+<p>The groups were formed with no profit data, so pooling each one and running it through the evaluator is a fair test of what the map found. Each cluster is treated as a single record; the interval comes from resampling its wallets, not its trades, so wallets betting on the same markets do not count as independent evidence.</p>
+{cluster_bars()}
+<div class="cap"><strong>Figure 5.</strong> Profit per dollar wagered by cluster, with 90% intervals. ✓ marks a group whose edge is positive with at least 95% confidence, ✗ negative with at least 95%.</div>
+<div class="tw"><table><thead><tr><th>group</th><th>wallets</th><th>notional</th><th>P&amp;L $M</th><th>edge ¢/$</th><th>90% interval</th><th>P(edge &gt; 0)</th><th>verdict</th></tr></thead><tbody>{fam_rows}</tbody></table></div>
+<p>The two machine clusters are the only groups with a decisively positive edge: {MACH.edge_per_dollar:+.2f}¢ per dollar on ${MACH.notional_M:,.0f}M, interval {MACH.ci_lo:+.2f} to {MACH.ci_hi:+.2f}, {MACH.pnl_M:+.1f}M in profit. The farms sit on zero ({FARM.edge_per_dollar:+.2f}¢, interval {FARM.ci_lo:+.2f} to {FARM.ci_hi:+.2f}) — expected, since their trades are constructed to carry no risk. Retail is decisively negative ({RET.edge_per_dollar:+.2f}¢, interval {RET.ci_lo:+.2f} to {RET.ci_hi:+.2f}), and the two bust clusters lose {-FAM[FAM.family == "bust"].iloc[0].edge_per_dollar:.1f}¢ per dollar.</p>
+<p>One detail worth noting: only {mach_prof:.0%} of the individual wallets inside the machine clusters are profitable, yet the group's edge is certain. A group can have a real edge while most of its members lose, and a single member can look brilliant while the group has none. That gap is the whole reason the evaluator exists.</p>
 
 <h2>How the evaluator works</h2>
 <p>Every record is treated as <em>true edge + noise</em> — the result you see is the trader's real ability plus randomness. For bets, the size of the randomness is known exactly: it shrinks with the number of trades and depends on the prices traded (variance ≈ 0.87·p(1−p)/n, calibrated on 75k resolved single bets in the census). The <em>prior</em> — what edges are common in this population before looking at any one record — is the census's own distribution of true edge. Combining the two gives the <em>posterior</em>: the range of true edges consistent with this record, which is where the luck-adjusted edge, its interval, and the trades still needed for proof come from.</p>

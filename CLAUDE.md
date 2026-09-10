@@ -23,6 +23,7 @@ Env: `.venv` (Python 3.12; pandas, pyarrow, numpy, scipy, scikit-learn, matplotl
 - `analysis/toxic.py` — 'one bot' chain: 95¢+ band edge, CV loss model at ≥98¢ (AUC), risk quintiles, the sport/whole-share 10–15 pattern, loser mechanics (maker share, hours, price modes), clean-vs-raw sizing. Writes `out/toxic_*.csv/json`.
 - `analysis/memo_toxic_web.py` — web memo for that chain (reuses the edge memo CSS): `out/memo_toxic_artifact.html`, published as a separate artifact.
 - `analysis/ml_features.py` → `ml_embed.py`/`ml_cluster2.py` (all wallets; weak) → `ml_active.py` (n≥20: AE embedding, UMAP+HDBSCAN species, blind validation, probes) → `ml_skill.py` (denoised-skill vs raw-label vs profit AUC; attribution) → `ml_labels.py` (confident learning) → `ml_page.py` (OOF decile ledger + `out/memo_ml_artifact.html`). Outputs in `out/ml/`.
+- `analysis/cluster_eval.py` — runs the evaluator on each discovered cluster (pooled record, 90% CI by resampling wallets not trades) → `out/ml/cluster_eval.csv`, `cluster_eval_family.csv`.
 - `analysis/out/` — generated tables/figures/memo (not source).
 
 ## Eval harness
