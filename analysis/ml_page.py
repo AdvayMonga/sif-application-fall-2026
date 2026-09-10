@@ -72,14 +72,14 @@ def cluster_bars():
         if lo < g < hi: o.append(f'<line x1="{xs(g):.1f}" x2="{xs(g):.1f}" y1="{T-6}" y2="{H-14}" class="grid"/><text x="{xs(g):.1f}" y="{T-12}" class="tick" text-anchor="middle">{g:+d}¢</text>')
     z = xs(0); o.append(f'<line x1="{z:.1f}" x2="{z:.1f}" y1="{T-6}" y2="{H-14}" class="axis"/>')
     for i, r in enumerate(t.itertuples()):
-        y = T + i * rowh + rowh / 2; cls = "bar" if r.edge_per_dollar >= 0 else "loss"
+        y = T + i * rowh + rowh / 2; cls = "gain" if r.edge_per_dollar >= 0 else "loss"
         x0, x1 = (z, xs(r.edge_per_dollar)) if r.edge_per_dollar >= 0 else (xs(r.edge_per_dollar), z)
         o.append(f'<g class="mark"><title>{r.name}: {r.edge_per_dollar:+.2f}¢ per dollar (90% CI {r.ci_lo_d:+.2f} to {r.ci_hi_d:+.2f}), {r.wallets:,} wallets, {r.trades:,} trades, ${r.notional_M:,.0f}M — {r.verdict}</title>')
         o.append(f'<rect x="{x0:.1f}" y="{y-7:.1f}" width="{max(x1-x0,1):.1f}" height="14" class="{cls}"/>')
         o.append(f'<line x1="{xs(r.ci_lo_d):.1f}" x2="{xs(r.ci_hi_d):.1f}" y1="{y:.1f}" y2="{y:.1f}" class="axis"/><line x1="{xs(r.ci_lo_d):.1f}" x2="{xs(r.ci_lo_d):.1f}" y1="{y-5:.1f}" y2="{y+5:.1f}" class="axis"/><line x1="{xs(r.ci_hi_d):.1f}" x2="{xs(r.ci_hi_d):.1f}" y1="{y-5:.1f}" y2="{y+5:.1f}" class="axis"/>')
         o.append(f'<text x="{L-8}" y="{y+4:.1f}" class="lbl" text-anchor="end">{r.name}</text>')
         star = "\u2713" if r.p_positive > .95 else ("\u2717" if r.p_positive < .05 else "")
-        o.append(f'<text x="{W-R+8}" y="{y+4:.1f}" class="lbl {"accent" if r.p_positive > .95 else ("loss" if r.p_positive < .05 else "muted")}">{r.edge_per_dollar:+.2f}¢ {star}</text></g>')
+        o.append(f'<text x="{W-R+8}" y="{y+4:.1f}" class="lbl {"gain" if r.p_positive > .95 else ("loss" if r.p_positive < .05 else "muted")}">{r.edge_per_dollar:+.2f}¢ {star}</text></g>')
     return "".join(o) + "</svg>"
 
 def cone_svg():
@@ -116,7 +116,7 @@ def umap_svg():
     return "".join(o) + "</svg>"
 
 FAM = pd.read_csv(OUT + "cluster_eval_family.csv")
-fam_rows = "".join(f"<tr><td>{r.family}</td><td>{r.wallets:,}</td><td>${r.notional_M:,.0f}M</td><td>{r.pnl_M:+.1f}</td><td>{r.edge_per_dollar:+.2f}</td><td>{r.ci_lo:+.2f} to {r.ci_hi:+.2f}</td><td>{r.p_positive:.0%}</td><td>{r.verdict}</td></tr>" for r in FAM.itertuples())
+fam_rows = "".join(f"<tr><td>{r.family}</td><td>{r.wallets:,}</td><td>${r.notional_M:,.0f}M</td><td>{r.pnl_M:+.1f}</td><td>{r.edge_per_dollar:+.2f}</td><td>{r.ci_lo:+.2f} to {r.ci_hi:+.2f}</td><td>{r.p_positive:.0%}</td><td>{"positive" if r.p_positive > .95 else ("negative" if r.p_positive < .05 else "luck")}</td></tr>" for r in FAM.itertuples())
 MACH = FAM[FAM.family == "machines"].iloc[0]; FARM = FAM[FAM.family == "farm"].iloc[0]; RET = FAM[FAM.family == "retail"].iloc[0]
 CE = pd.read_csv(OUT + "cluster_eval.csv"); mach_prof = CE[CE.name.str.startswith("machines")].frac_profitable.mean()
 named = {0: "machines A", 11: "machines B", 3: "farm A", 13: "farm B", 14: "farm C", 8: "bust A", 10: "bust B"}
@@ -165,7 +165,7 @@ a{{color:var(--sif-red);text-decoration:none;border-bottom:1px solid transparent
 .chart .grid{{stroke:var(--soft-line);stroke-width:1}} .chart .axis{{stroke:var(--line);stroke-width:1}} .chart .tick{{fill:var(--muted);font-size:12px}}
 .chart .lbl{{fill:var(--ink);font-size:12.5px}} .chart .lbl.strong{{fill:var(--ink);font-weight:600}} .chart .lbl.accent{{fill:var(--sif-red);font-weight:600}} .chart .lbl.loss{{fill:var(--negative);font-weight:600}} .chart .lbl.muted{{fill:var(--muted)}}
 .chart .ref{{fill:var(--muted)}} .chart .ref2{{fill:var(--line)}} .chart .acc{{fill:var(--sif-red);stroke:var(--paper);stroke-width:2}} .chart .ci{{stroke:var(--sif-red);stroke-width:2}} .chart .gap{{stroke:var(--muted);stroke-width:1.5;stroke-dasharray:3 3}}
-.chart .bar{{fill:var(--sif-red)}} .chart rect.loss{{fill:var(--negative)}} .chart .p-farm{{fill:var(--gold)}} .chart .p-bust{{fill:var(--negative)}} .chart .mark:hover .bar,.chart .mark:hover .acc{{filter:brightness(1.15)}} .chart .mark{{cursor:default}}
+.chart .bar{{fill:var(--sif-red)}} .chart rect.loss{{fill:var(--negative)}} .chart rect.gain{{fill:var(--positive)}} .chart .lbl.gain{{fill:var(--positive);font-weight:600}} .chart .p-farm{{fill:var(--gold)}} .chart .p-bust{{fill:var(--negative)}} .chart .mark:hover .bar,.chart .mark:hover .acc{{filter:brightness(1.15)}} .chart .mark{{cursor:default}}
 .chart .cone{{fill:var(--muted);opacity:.14}} .chart .cone2{{fill:var(--muted);opacity:.10}} .chart .eq{{fill:none;stroke:var(--sif-red);stroke-width:2.2;stroke-linejoin:round}} .chart .zero{{stroke:var(--ink);stroke-width:1;stroke-dasharray:4 4;opacity:.5}}
 .cap{{color:var(--muted);font-size:.8rem;margin:0 0 18px;line-height:1.45}}
 .tw{{overflow-x:auto;margin:8px 0 18px;background:var(--paper);border:1px solid var(--line)}} table{{border-collapse:collapse;width:100%;font-family:var(--font-ui);font-size:.82rem;font-variant-numeric:tabular-nums}}
@@ -203,7 +203,7 @@ pre.card{{background:var(--paper);border:1px solid var(--line);border-left:4px s
 <p>The groups were formed with no profit data, so pooling each one and running it through the evaluator is a fair test of what the map found. Each cluster is treated as a single record; the interval comes from resampling its wallets, not its trades, so wallets betting on the same markets do not count as independent evidence.</p>
 {cluster_bars()}
 <div class="cap"><strong>Figure 5.</strong> Profit per dollar wagered by cluster, with 90% intervals. ✓ marks a group whose edge is positive with at least 95% confidence, ✗ negative with at least 95%.</div>
-<div class="tw"><table><thead><tr><th>group</th><th>wallets</th><th>notional</th><th>P&amp;L $M</th><th>edge ¢/$</th><th>90% interval</th><th>P(edge &gt; 0)</th><th>verdict</th></tr></thead><tbody>{fam_rows}</tbody></table></div>
+<div class="tw"><table><thead><tr><th>group</th><th>wallets</th><th>notional</th><th>P&amp;L $M</th><th>edge ¢/$</th><th>90% interval</th><th>P(edge&gt;0)</th><th>verdict</th></tr></thead><tbody>{fam_rows}</tbody></table></div>
 <p>The two machine clusters are the only groups with a decisively positive edge: {MACH.edge_per_dollar:+.2f}¢ per dollar on ${MACH.notional_M:,.0f}M, interval {MACH.ci_lo:+.2f} to {MACH.ci_hi:+.2f}, {MACH.pnl_M:+.1f}M in profit. The farms sit on zero ({FARM.edge_per_dollar:+.2f}¢, interval {FARM.ci_lo:+.2f} to {FARM.ci_hi:+.2f}) — expected, since their trades are constructed to carry no risk. Retail is decisively negative ({RET.edge_per_dollar:+.2f}¢, interval {RET.ci_lo:+.2f} to {RET.ci_hi:+.2f}), and the two bust clusters lose {-FAM[FAM.family == "bust"].iloc[0].edge_per_dollar:.1f}¢ per dollar.</p>
 <p>One detail worth noting: only {mach_prof:.0%} of the individual wallets inside the machine clusters are profitable, yet the group's edge is certain. A group can have a real edge while most of its members lose, and a single member can look brilliant while the group has none. That gap is the whole reason the evaluator exists.</p>
 
