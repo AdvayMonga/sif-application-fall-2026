@@ -205,40 +205,40 @@ page = f"""<title>SIF Application, Fall 2026</title>
 :root{{--sif-red:#8f151d;--sif-red-dark:#651016;--ink:#151515;--muted:#747474;--line:#dedede;--soft-line:#eeeeee;--paper:#ffffff;--wash:#f7f5f2;--positive:#1a8a52;--negative:#c0392b;--gold:#b8860b;--font-num:"JetBrains Mono",monospace;--font-ui:"Inter",system-ui,sans-serif}}
 @media (prefers-color-scheme: dark){{:root:not([data-theme="light"]){{--sif-red:#b8202a;--sif-red-dark:#8f151d;--ink:#e8e4df;--muted:#909090;--line:#2a2a2a;--soft-line:#222222;--paper:#1e1b18;--wash:#141210;--positive:#3fb87f;--negative:#d8584f;--gold:#d4a017}}}}
 :root[data-theme="dark"]{{--sif-red:#b8202a;--sif-red-dark:#8f151d;--ink:#e8e4df;--muted:#909090;--line:#2a2a2a;--soft-line:#222222;--paper:#1e1b18;--wash:#141210;--positive:#3fb87f;--negative:#d8584f;--gold:#d4a017}}
-*{{box-sizing:border-box}} body{{margin:0;font-family:'Poppins',Arial,Helvetica,sans-serif;color:var(--ink);background:linear-gradient(180deg,rgba(143,21,29,.08),rgba(143,21,29,0) 190px),var(--wash);font-size:15.5px;line-height:1.55}}
-.wrap{{max-width:980px;margin:0 auto;padding:34px 32px 60px}}
-.topbar{{padding-bottom:18px;margin-bottom:26px;border-bottom:2px solid var(--sif-red)}}
+*{{box-sizing:border-box}} body{{margin:0;font-family:'Poppins',Arial,Helvetica,sans-serif;color:var(--ink);background:linear-gradient(180deg,rgba(143,21,29,.08),rgba(143,21,29,0) 190px),var(--wash);font-size:14px;line-height:1.5}}
+.wrap{{max-width:940px;margin:0 auto;padding:26px 30px 40px}}
+.topbar{{padding-bottom:12px;margin-bottom:16px;border-bottom:2px solid var(--sif-red)}}
 .kicker{{color:var(--sif-red);font-size:.72rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;margin:0 0 6px}}
-h1{{font-size:clamp(2rem,5vw,3.4rem);line-height:1;font-weight:500;margin:0 0 10px;letter-spacing:0}}
+h1{{font-size:clamp(1.7rem,4vw,2.6rem);line-height:1.02;font-weight:500;margin:0 0 6px;letter-spacing:0}}
 .sub{{color:var(--muted);font-size:.9rem;margin:0}}
-h2{{font-size:1.15rem;font-weight:700;letter-spacing:.02em;margin:40px 0 12px;padding-left:12px;border-left:4px solid var(--sif-red)}}
-h3{{font-size:.95rem;font-weight:500;margin:24px 0 8px}}
-p{{margin:0 0 12px}} ul{{margin:0 0 12px;padding-left:22px}} li{{margin-bottom:6px}} strong{{font-weight:600}}
-ul.lede{{list-style:none;padding:0;margin:6px 0 16px}} ul.lede li{{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--sif-red);padding:12px 14px;margin:0 0 10px}}
+h2{{font-size:1.05rem;font-weight:700;letter-spacing:.02em;margin:26px 0 9px;padding-left:12px;border-left:4px solid var(--sif-red)}}
+h3{{font-size:.9rem;font-weight:600;margin:16px 0 6px}}
+p{{margin:0 0 9px}} ul{{margin:0 0 9px;padding-left:20px}} li{{margin-bottom:4px}} strong{{font-weight:600}}
+ul.lede{{list-style:none;padding:0;margin:6px 0 16px}} ul.lede li{{background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--sif-red);padding:8px 12px;margin:0 0 7px}}
 a{{color:var(--sif-red);text-decoration:none;border-bottom:1px solid transparent}} a:hover,a:focus-visible{{border-bottom-color:var(--sif-red);outline:none}}
-.chart{{width:100%;height:auto;display:block;margin:14px 0 6px;background:var(--paper);border:1px solid var(--line);font-family:var(--font-ui)}}
+.chart{{width:100%;height:auto;display:block;margin:10px 0 5px;background:var(--paper);border:1px solid var(--line);font-family:var(--font-ui)}}
 .chart .grid{{stroke:var(--soft-line);stroke-width:1}} .chart .axis{{stroke:var(--line);stroke-width:1}} .chart .tick{{fill:var(--muted);font-size:12px}}
 .chart .lbl{{fill:var(--ink);font-size:12.5px}} .chart .lbl.strong{{fill:var(--ink);font-weight:600}} .chart .lbl.accent{{fill:var(--sif-red);font-weight:600}} .chart .lbl.loss{{fill:var(--negative);font-weight:600}} .chart .lbl.muted{{fill:var(--muted)}}
 .chart .ref{{fill:var(--muted)}} .chart .ref2{{fill:var(--line)}} .chart .acc{{fill:var(--sif-red);stroke:var(--paper);stroke-width:2}} .chart .ci{{stroke:var(--sif-red);stroke-width:2}} .chart .gap{{stroke:var(--muted);stroke-width:1.5;stroke-dasharray:3 3}}
 .chart .bar{{fill:var(--sif-red)}} .chart rect.loss{{fill:var(--negative)}} .chart rect.gain{{fill:var(--positive)}} .chart .lbl.gain{{fill:var(--positive);font-weight:600}} .chart .p-farm{{fill:var(--gold)}} .chart .p-bust{{fill:var(--negative)}} .chart .mark:hover .bar,.chart .mark:hover .acc{{filter:brightness(1.15)}} .chart .mark{{cursor:default}}
 .chart .fbox{{fill:var(--wash);stroke:var(--line);stroke-width:1}} .chart .arrow{{fill:none;stroke:var(--muted);stroke-width:1.5}} .chart .flow-mid{{fill:var(--sif-red);font-family:var(--font-num);font-size:12.5px}}
 .chart .cone{{fill:var(--muted);opacity:.14}} .chart .cone2{{fill:var(--muted);opacity:.10}} .chart .eq{{fill:none;stroke:var(--sif-red);stroke-width:2.2;stroke-linejoin:round}} .chart .zero{{stroke:var(--ink);stroke-width:1;stroke-dasharray:4 4;opacity:.5}}
-.cap{{color:var(--muted);font-size:.8rem;margin:0 0 18px;line-height:1.45}}
-.tw{{overflow-x:auto;margin:8px 0 18px;background:var(--paper);border:1px solid var(--line)}} table{{border-collapse:collapse;width:100%;font-family:var(--font-ui);font-size:.82rem;font-variant-numeric:tabular-nums}}
-th,td{{padding:8px 10px;text-align:right;border-bottom:1px solid var(--soft-line);white-space:nowrap}} th{{color:var(--sif-red);font-weight:700;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;border-bottom:1px solid var(--line)}}
+.cap{{color:var(--muted);font-size:.76rem;margin:0 0 12px;line-height:1.4}}
+.tw{{overflow-x:auto;margin:6px 0 12px;background:var(--paper);border:1px solid var(--line)}} table{{border-collapse:collapse;width:100%;font-family:var(--font-ui);font-size:.82rem;font-variant-numeric:tabular-nums}}
+th,td{{padding:5px 9px;text-align:right;border-bottom:1px solid var(--soft-line);white-space:nowrap}} th{{color:var(--sif-red);font-weight:700;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;border-bottom:1px solid var(--line)}}
 td:first-child,th:first-child{{text-align:left;white-space:normal}} td{{font-family:var(--font-num)}} td:first-child{{font-family:var(--font-ui)}}
 pre.card{{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--sif-red);padding:12px 14px;font:12.5px/1.5 var(--font-num);overflow-x:auto;white-space:pre-wrap;margin:0 0 8px;color:var(--ink)}}
-.rc{{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--sif-red);margin:0 0 14px}}
-.rc-h{{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding:12px 16px;border-bottom:1px solid var(--soft-line)}}
+.rc{{background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--sif-red);margin:0 0 10px}}
+.rc-h{{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:8px 13px;border-bottom:1px solid var(--soft-line)}}
 .rc-t{{font-weight:600;font-size:.98rem}} .rc-s{{color:var(--muted);font-size:.8rem;font-family:var(--font-num);margin-top:3px}}
 .badge{{font-size:.62rem;font-weight:700;letter-spacing:.1em;padding:4px 9px;white-space:nowrap;border:1px solid currentColor}}
 .badge.gain{{color:var(--positive)}} .badge.loss{{color:var(--negative)}} .badge.warn{{color:var(--muted)}}
-.rc-g{{display:grid;grid-template-columns:minmax(150px,34%) 1fr;gap:0}} .rc-g>div{{padding:8px 16px;border-bottom:1px solid var(--soft-line)}}
+.rc-g{{display:grid;grid-template-columns:minmax(150px,34%) 1fr;gap:0}} .rc-g>div{{padding:5px 13px;border-bottom:1px solid var(--soft-line)}}
 .rc-g>div:nth-last-child(-n+2){{border-bottom:none}} .rc-g .k{{color:var(--muted);font-size:.8rem}} .rc-g .v{{font-family:var(--font-num);font-size:.84rem;font-variant-numeric:tabular-nums}}
 .rc-g .dim{{color:var(--muted)}}
-ol.steps{{padding-left:20px}} ol.steps li{{margin-bottom:9px}} .dim{{color:var(--muted)}}
-.lead{{font-size:1.02rem;margin:0 0 12px}} .lead:first-of-type{{margin-top:4px}}
-.dfn{{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--muted);padding:10px 14px;margin:0 0 14px;font-size:.88rem}}
+ol.steps{{padding-left:20px}} ol.steps li{{margin-bottom:5px}} .dim{{color:var(--muted)}}
+.lead{{font-size:.97rem;margin:0 0 9px}} .lead:first-of-type{{margin-top:4px}}
+.dfn{{background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--muted);padding:7px 12px;margin:0 0 10px;font-size:.84rem}}
 .small{{font-size:.82rem;color:var(--muted)}} code{{font-family:var(--font-num);font-size:.85em;background:var(--paper);border:1px solid var(--soft-line);padding:1px 5px}}
 @media (prefers-reduced-motion: reduce){{*{{transition:none}}}}
 </style>
@@ -250,7 +250,7 @@ ol.steps{{padding-left:20px}} ol.steps li{{margin-bottom:9px}} .dim{{color:var(-
 <p class="lead">I built a tool that does this, then pointed it at the wallets, at the groups they fall into, and at SIF Live's own trading account. Section 4 shows the calculation.</p>
 
 <h2>1. The dataset, grouped by how people trade</h2>
-<p>Each row is one wallet: how often it traded, how big its bets were, at what prices, at what times, and how much it made. I grouped wallets on the first four and ignored the last.</p>
+<p>Each row is one wallet: how often it traded, bet sizes, prices, times, and profit. I grouped on everything except profit.</p>
 {umap_svg()}
 <div class="cap"><strong>Figure 1.</strong> Each dot is one of the 124,064 wallets with 20 or more trades (14,000 shown). Each wallet starts as 26 measures of how it trades, which a neural network squeezes to 12 numbers, and UMAP places on two axes. The axes have no units; only closeness means anything. No profit data was used. Names were added afterwards.</div>
 <ul>
@@ -261,7 +261,7 @@ ol.steps{{padding-left:20px}} ol.steps li{{margin-bottom:9px}} .dim{{color:var(-
 </ul>
 
 <h2>2. Which groups make money</h2>
-<p>Profit data goes back in. If wallets that trade alike also earn alike, the grouping found something real.</p>
+<p>Profit goes back in. If wallets that trade alike also earn alike, the grouping found something real.</p>
 {cluster_bars()}
 <div class="cap"><strong>Figure 2.</strong> Profit per dollar wagered, by group, with the 90% range. A tick means the group makes money with at least 95% confidence, a cross that it loses money, no mark that its edge cannot be told apart from zero.</div>
 <div class="tw"><table><thead><tr><th>group</th><th>wallets</th><th>traded</th><th>profit $M</th><th>edge ¢/$</th><th>P(edge&gt;0)</th><th>verdict</th></tr></thead><tbody>{fam_rows}</tbody></table></div>
@@ -284,7 +284,7 @@ ol.steps{{padding-left:20px}} ol.steps li{{margin-bottom:9px}} .dim{{color:var(-
 </ul>
 
 <h2>4. How skill is separated from luck</h2>
-<p>This is the calculation everything above rests on. We never ask why a price moved. We use how a bet pays. Buy a share at price p and you either gain 1 - p or lose p. Nothing else can happen.</p>
+<p>The calculation everything above rests on. We never ask why a price moved, only how a bet pays: buy a share at price p and you either gain 1 - p or lose p.</p>
 <ul>
 <li>If the price is a fair probability, the swing in profit per share is <strong>p(1-p)</strong>. At 50¢ that is 0.25, at 97¢ it is 0.03.</li>
 <li>Over n bets, luck is <strong>p(1-p) / n</strong>. More trades, less luck.</li>
@@ -294,7 +294,7 @@ ol.steps{{padding-left:20px}} ol.steps li{{margin-bottom:9px}} .dim{{color:var(-
 {flow_svg()}
 <div class="cap"><strong>Figure 3.</strong> The five steps from a record to an answer.</div>
 {card_whale}{card_oneshot}
-<p class="small">Both look excellent on raw profit. The first traded 2,072 times, so its result is not luck. The second traded once, so it proves nothing, and the tool says so.</p>
+<p class="small">Both look excellent on raw profit. The first traded 2,072 times, so it is not luck. The second traded once, so it proves nothing, and the tool says so.</p>
 
 <h2>5. Checks</h2>
 <p>If the luck-adjusted number is real, how a wallet trades should predict it.</p>
@@ -330,13 +330,13 @@ ol.steps{{padding-left:20px}} ol.steps li{{margin-bottom:9px}} .dim{{color:var(-
 </ol>
 
 <h2>The tool</h2>
-<p>All of this runs from a small Python package, <code>sifeval</code>. Give it a wallet address, a file of trades, or daily account values, and it returns the raw result, the result after removing luck, the range that could sit in, the chance the edge is real, how much more trading would settle it, and where the record ranks against the 124,064 wallets with 20 or more trades.</p>
+<p>All of this runs from a small Python package, <code>sifeval</code>. It returns the raw result, the result after removing luck, the range that could sit in, the chance the edge is real, how much more trading would settle it, and where the record ranks against the 124,064 wallets with 20 or more trades.</p>
 <div class="tw"><table><thead><tr><th>command</th><th>input</th></tr></thead><tbody>
 <tr><td>sifeval eval trades.csv</td><td>a file of trades: price, size, won</td></tr>
 <tr><td>sifeval returns equity.csv</td><td>daily account values</td></tr>
 <tr><td>sifeval wallet 0x...</td><td>any wallet in the dataset</td></tr>
 </tbody></table></div>
-<p>It carries the population's skill distribution in a 16 KB file, so it runs on a new record without needing the dataset. Six tests cover it.</p>
+<p>It carries the population's skill distribution in a 16 KB file, so it runs without the dataset.</p>
 <p><strong>Code and README:</strong> <a href="https://github.com/AdvayMonga/sif-application-fall-2026">github.com/AdvayMonga/sif-application-fall-2026</a></p>
 
 <h2>Limits</h2>
