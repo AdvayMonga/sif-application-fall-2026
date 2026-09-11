@@ -240,7 +240,7 @@ pre.card{{background:var(--paper);border:1px solid var(--line);border-left:4px s
 @media (prefers-reduced-motion: reduce){{*{{transition:none}}}}
 </style>
 <div class="wrap">
-<div class="topbar"><p class="kicker">Smith Investment Fund · Application · Fall 2026</p><h1>Skill or luck?</h1>
+<div class="topbar"><p class="kicker">Smith Investment Fund · Skill or luck?</p><h1>SIF Application, Fall 2026</h1>
 <p class="sub">Advay Monga · 604,578 Polymarket wallets. Sorting the traders who have a real edge from the ones who got lucky.</p></div>
 
 <h2>1. What is in the dataset</h2>
