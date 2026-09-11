@@ -27,7 +27,7 @@ auc = json.load(open(OUT + "skill_auc.json")); attr = pd.read_csv(OUT + "skill_a
 pct = lambda x, dd=1: f"{100*x:.{dd}f}%"
 
 def grouped_auc():
-    W, H, L, T, B = 680, 300, 56, 22, 44; groups = ["n ≥ 20", "n ≥ 50", "n ≥ 100"]; series = [("denoised skill", "bar"), ("profit sign", "ref"), ("raw label sharp vs awful", "ref2")]
+    W, H, L, T, B = 680, 250, 52, 20, 38; groups = ["n ≥ 20", "n ≥ 50", "n ≥ 100"]; series = [("denoised skill", "bar"), ("profit sign", "ref"), ("raw label sharp vs awful", "ref2")]
     ys = lambda v: T + (H - T - B) * (1 - (v - 0.5) / 0.5); gx = lambda i: L + (W - L - 16) * (i + 0.5) / 3; bw = 46
     o = [f'<svg viewBox="0 0 {W} {H}" class="chart" role="img" aria-label="Cross-validated AUC by target">']
     for v in [0.5, 0.6, 0.7, 0.8, 0.9, 1.0]: o.append(f'<line x1="{L}" x2="{W-16}" y1="{ys(v):.1f}" y2="{ys(v):.1f}" class="grid"/><text x="{L-8}" y="{ys(v)+4:.1f}" class="tick" text-anchor="end">{v:.1f}</text>')
@@ -50,7 +50,7 @@ def importance():
     return "".join(o) + "</svg>"
 
 def deciles():
-    W, H, L, T, B = 680, 280, 56, 20, 40; v = led.c_per_dollar.values; ymin, ymax = min(v.min(), -10) * 1.15, max(v.max(), 2) * 1.4
+    W, H, L, T, B = 680, 225, 52, 18, 34; v = led.c_per_dollar.values; ymin, ymax = min(v.min(), -10) * 1.15, max(v.max(), 2) * 1.4
     ys = lambda x: T + (H - T - B) * (ymax - x) / (ymax - ymin); xs = lambda i: L + (W - L - 16) * (i + 0.5) / 10; bw = 44; z = ys(0)
     o = [f'<svg viewBox="0 0 {W} {H}" class="chart" role="img" aria-label="Realized return by predicted-skill decile">']
     for g in [-10, -5, 0, 1]: o.append(f'<line x1="{L}" x2="{W-16}" y1="{ys(g):.1f}" y2="{ys(g):.1f}" class="{"axis" if g==0 else "grid"}"/><text x="{L-8}" y="{ys(g)+4:.1f}" class="tick" text-anchor="end">{g:+d}¢</text>')
@@ -68,15 +68,15 @@ def flow_svg():
              ("How much real skill exists at all?", "91% of wallets sit within ±1¢ of zero", "Recovered from all 604,578 wallets by subtracting that luck from the spread of results."),
              ("Combine the two", "range of real edges that fit this record", "A short record with a big result is pulled towards zero. A long record is left alone."),
              ("What comes out", "edge · chance it is real · record still needed", "The same three answers for a wallet, a file of trades, or a series of daily account values.")]
-    W, BW, BH, GAP, L = 820, 700, 78, 26, 60
+    W, BW, BH, GAP, L = 820, 700, 62, 18, 60
     H = 16 + len(steps) * (BH + GAP)
     o = [f'<svg viewBox="0 0 {W} {H}" class="chart" role="img" aria-label="How the luck adjustment works">']
     for i, (t, mid, sub) in enumerate(steps):
         y = 8 + i * (BH + GAP)
         o.append(f'<rect x="{L}" y="{y}" width="{BW}" height="{BH}" class="fbox"/><rect x="{L}" y="{y}" width="4" height="{BH}" class="bar"/>')
-        o.append(f'<text x="{L+18}" y="{y+24}" class="lbl strong">{i+1}. {t}</text>')
-        o.append(f'<text x="{L+18}" y="{y+44}" class="flow-mid">{mid}</text>')
-        o.append(f'<text x="{L+18}" y="{y+64}" class="tick">{sub}</text>')
+        o.append(f'<text x="{L+16}" y="{y+19}" class="lbl strong">{i+1}. {t}</text>')
+        o.append(f'<text x="{L+16}" y="{y+36}" class="flow-mid">{mid}</text>')
+        o.append(f'<text x="{L+16}" y="{y+53}" class="tick">{sub}</text>')
         if i < len(steps) - 1:
             cx = L + BW / 2
             o.append(f'<line x1="{cx}" x2="{cx}" y1="{y+BH}" y2="{y+BH+GAP-8}" class="axis"/><path d="M{cx-5},{y+BH+GAP-12} L{cx},{y+BH+GAP-4} L{cx+5},{y+BH+GAP-12}" class="arrow"/>')
@@ -117,7 +117,7 @@ def html_card_returns(title, rep, sub):
 def cluster_bars():
     """Edge per dollar with 90% wallet-bootstrap CI, per discovered cluster."""
     t = pd.read_csv(OUT + "cluster_eval.csv").sort_values("edge_per_dollar", ascending=False)
-    W, L, R, rowh, T = 820, 118, 96, 26, 30; H = T + rowh * len(t) + 18
+    W, L, R, rowh, T = 820, 110, 90, 21, 26; H = T + rowh * len(t) + 14
     lo, hi = min(t.ci_lo_d.min(), -8), max(t.ci_hi_d.max(), 2); span = hi - lo
     xs = lambda v: L + (W - L - R) * (v - lo) / span
     o = [f'<svg viewBox="0 0 {W} {H}" class="chart" role="img" aria-label="Edge per dollar by cluster with confidence intervals">']
@@ -139,7 +139,7 @@ def cone_svg():
     """SIF Live 1Y equity (indexed to 100) inside the band a zero-edge strategy with the same daily volatility would produce."""
     h = SL["history"]["1Y"]; eq = pd.Series(h["equity"], index=pd.to_datetime(h["timestamps"], unit="s")); idx = 100 * eq.values / eq.values[0]
     r = eq.pct_change().dropna().values; sd = r.std(ddof=1); n = len(idx); t = np.arange(n)
-    W, H, L, R, T, B = 820, 360, 54, 70, 26, 40; ymin, ymax = min(idx.min(), 100 - 2.2 * 100 * sd * math.sqrt(n)) - 1, max(idx.max(), 100 + 2.2 * 100 * sd * math.sqrt(n)) + 1
+    W, H, L, R, T, B = 820, 300, 54, 70, 22, 34; ymin, ymax = min(idx.min(), 100 - 2.2 * 100 * sd * math.sqrt(n)) - 1, max(idx.max(), 100 + 2.2 * 100 * sd * math.sqrt(n)) + 1
     xs = lambda i: L + (W - L - R) * i / (n - 1); ys = lambda v: T + (H - T - B) * (ymax - v) / (ymax - ymin)
     band = lambda z: (100 + z * 100 * sd * np.sqrt(t), 100 - z * 100 * sd * np.sqrt(t))
     def poly(up, lo, cls): return f'<polygon class="{cls}" points="' + " ".join(f"{xs(i):.1f},{ys(up[i]):.1f}" for i in range(n)) + " " + " ".join(f"{xs(i):.1f},{ys(lo[i]):.1f}" for i in range(n - 1, -1, -1)) + '"/>'
@@ -159,7 +159,7 @@ def umap_svg():
     U = np.load(OUT + "active_umap.npy"); C = pd.read_parquet(OUT + "active_clusters.parquet"); A = df[df.n >= 20].reset_index(drop=True)
     grp = {0: "machines", 11: "machines", 3: "farms", 13: "farms", 14: "farms", 8: "bust", 10: "bust"}; g = C.cluster.map(grp).fillna("retail")
     rng = np.random.default_rng(0); sub = rng.choice(len(U), 14000, replace=False)
-    W, H = 680, 460; x0, x1 = np.percentile(U[:, 0], [0.5, 99.5]); y0, y1 = np.percentile(U[:, 1], [0.5, 99.5])
+    W, H = 680, 380; x0, x1 = np.percentile(U[:, 0], [0.5, 99.5]); y0, y1 = np.percentile(U[:, 1], [0.5, 99.5])
     cls = {"machines": "acc", "farms": "p-farm", "bust": "p-bust", "retail": "ref"}; o = [f'<svg viewBox="0 0 {W} {H}" class="chart" role="img" aria-label="UMAP of active wallets">']
     for i in sub[np.argsort([g.iloc[i] == "retail" for i in sub])[::-1]]:
         px = 20 + (W - 40) * (U[i, 0] - x0) / (x1 - x0); py = 20 + (H - 60) * (1 - (U[i, 1] - y0) / (y1 - y0))
@@ -205,13 +205,13 @@ page = f"""<title>SIF Application, Fall 2026</title>
 :root{{--sif-red:#8f151d;--sif-red-dark:#651016;--ink:#151515;--muted:#747474;--line:#dedede;--soft-line:#eeeeee;--paper:#ffffff;--wash:#f7f5f2;--positive:#1a8a52;--negative:#c0392b;--gold:#b8860b;--font-num:"JetBrains Mono",monospace;--font-ui:"Inter",system-ui,sans-serif}}
 @media (prefers-color-scheme: dark){{:root:not([data-theme="light"]){{--sif-red:#b8202a;--sif-red-dark:#8f151d;--ink:#e8e4df;--muted:#909090;--line:#2a2a2a;--soft-line:#222222;--paper:#1e1b18;--wash:#141210;--positive:#3fb87f;--negative:#d8584f;--gold:#d4a017}}}}
 :root[data-theme="dark"]{{--sif-red:#b8202a;--sif-red-dark:#8f151d;--ink:#e8e4df;--muted:#909090;--line:#2a2a2a;--soft-line:#222222;--paper:#1e1b18;--wash:#141210;--positive:#3fb87f;--negative:#d8584f;--gold:#d4a017}}
-*{{box-sizing:border-box}} body{{margin:0;font-family:'Poppins',Arial,Helvetica,sans-serif;color:var(--ink);background:linear-gradient(180deg,rgba(143,21,29,.08),rgba(143,21,29,0) 190px),var(--wash);font-size:14px;line-height:1.5}}
-.wrap{{max-width:940px;margin:0 auto;padding:26px 30px 40px}}
+*{{box-sizing:border-box}} body{{margin:0;font-family:'Poppins',Arial,Helvetica,sans-serif;color:var(--ink);background:linear-gradient(180deg,rgba(143,21,29,.08),rgba(143,21,29,0) 190px),var(--wash);font-size:13px;line-height:1.45}}
+.wrap{{max-width:940px;margin:0 auto;padding:22px 28px 24px}}
 .topbar{{padding-bottom:12px;margin-bottom:16px;border-bottom:2px solid var(--sif-red)}}
 .kicker{{color:var(--sif-red);font-size:.72rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;margin:0 0 6px}}
 h1{{font-size:clamp(1.7rem,4vw,2.6rem);line-height:1.02;font-weight:500;margin:0 0 6px;letter-spacing:0}}
 .sub{{color:var(--muted);font-size:.9rem;margin:0}}
-h2{{font-size:1.05rem;font-weight:700;letter-spacing:.02em;margin:26px 0 9px;padding-left:12px;border-left:4px solid var(--sif-red)}}
+h2{{font-size:1rem;font-weight:700;letter-spacing:.02em;margin:20px 0 7px;padding-left:12px;border-left:4px solid var(--sif-red)}}
 h3{{font-size:.9rem;font-weight:600;margin:16px 0 6px}}
 p{{margin:0 0 9px}} ul{{margin:0 0 9px;padding-left:20px}} li{{margin-bottom:4px}} strong{{font-weight:600}}
 ul.lede{{list-style:none;padding:0;margin:6px 0 16px}} ul.lede li{{background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--sif-red);padding:8px 12px;margin:0 0 7px}}
@@ -241,6 +241,7 @@ ol.steps{{padding-left:20px}} ol.steps li{{margin-bottom:5px}} .dim{{color:var(-
 .dfn{{background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--muted);padding:7px 12px;margin:0 0 10px;font-size:.84rem}}
 .small{{font-size:.82rem;color:var(--muted)}} code{{font-family:var(--font-num);font-size:.85em;background:var(--paper);border:1px solid var(--soft-line);padding:1px 5px}}
 @media (prefers-reduced-motion: reduce){{*{{transition:none}}}}
+@media print{{.chart,.rc,.tw{{break-inside:auto}} h2{{break-after:avoid}} .cap{{break-before:avoid}}}}
 </style>
 <div class="wrap">
 <div class="topbar"><p class="kicker">Smith Investment Fund · Skill or luck?</p><h1>SIF Application, Fall 2026</h1>
@@ -304,14 +305,12 @@ ol.steps{{padding-left:20px}} ol.steps li{{margin-bottom:5px}} .dim{{color:var(-
 <li>Luck-adjusted skill: <strong>{a50:.2f}</strong>. The dataset's own "sharp / awful" label, same model, same wallets: <strong>{r50:.2f}</strong>.</li>
 <li>That label is mostly luck. Checking each one against model predictions flags {pct(lab['flag_rate'],0)} as probably wrong, {lab['flag_by_label']['sharp']*100:.0f}% of the "sharp" ones.</li>
 </ul>
-{importance()}
-<div class="cap"><strong>Figure 5.</strong> What the model relies on. A longer bar means more accuracy is lost when that measure is scrambled.</div>
 <ul>
-<li><strong>Bet-size variation matters most</strong>, {attr.importance.iloc[0]/attr.importance.iloc[1]:.1f} times more than anything else. Skilled wallets vary their stake. Unskilled wallets bet the same every time.</li>
+<li><strong>Bet-size variation matters most</strong>, {attr.importance.iloc[0]/attr.importance.iloc[1]:.1f} times more than anything else in the model. Skilled wallets vary their stake. Unskilled wallets bet the same every time.</li>
 <li>Wallets trading mid-range prices beat wallets buying 99¢ near-certainties.</li>
 </ul>
 {deciles()}
-<div class="cap"><strong>Figure 6.</strong> Wallets with 50 or more trades, sorted into ten groups by predicted skill, against the money they actually made. Each wallet scored by a model that never trained on it.</div>
+<div class="cap"><strong>Figure 5.</strong> Wallets with 50 or more trades, sorted into ten groups by predicted skill, against the money they actually made. Each wallet scored by a model that never trained on it.</div>
 <ul>
 <li>Only the top group makes money ({top.c_per_dollar:+.2f}¢ per dollar, {pct(top.frac_profitable,0)} in profit). Groups 4 to 8 lose 2 to 7¢.</li>
 <li>The model never saw profit, and its ranking still lines up with real money. That is the check that the method works.</li>
@@ -326,31 +325,12 @@ ol.steps{{padding-left:20px}} ol.steps li{{margin-bottom:5px}} .dim{{color:var(-
 <li><strong>Measure luck.</strong> Profit per share swings by p(1-p) per bet and p(1-p)/n over a record. The multiplier 0.87 is fitted on the 75,855 one-bet wallets rather than assumed.</li>
 <li><strong>Remove luck from the population.</strong> Subtracting that swing from the spread of everyone's results leaves the spread of real skill: 91% of wallets within one cent per share of zero.</li>
 <li><strong>Score a single record.</strong> Combine its result, its own luck size and that population spread. Out comes the luck-adjusted edge, a 90% range, the chance the edge is real, and how much more trading would settle it. <span class="dim">(Figure 3)</span></li>
-<li><strong>Check the whole thing.</strong> Train a model on the 26 behaviour measures to predict the luck-adjusted result, five-fold cross-validated: AUC {a50:.2f}, against {r50:.2f} for the dataset's own label. Then sort wallets by predicted skill and compare with profit the model never saw. <span class="dim">(Figures 4 to 6)</span></li>
+<li><strong>Check the whole thing.</strong> Train a model on the 26 behaviour measures to predict the luck-adjusted result, five-fold cross-validated: AUC {a50:.2f}, against {r50:.2f} for the dataset's own label. Then sort wallets by predicted skill and compare with profit the model never saw. <span class="dim">(Figures 4 and 5)</span></li>
 </ol>
 
-<h2>The tool</h2>
-<p>All of this runs from a small Python package, <code>sifeval</code>. It returns the raw result, the result after removing luck, the range that could sit in, the chance the edge is real, how much more trading would settle it, and where the record ranks against the 124,064 wallets with 20 or more trades.</p>
-<div class="tw"><table><thead><tr><th>command</th><th>input</th></tr></thead><tbody>
-<tr><td>sifeval eval trades.csv</td><td>a file of trades: price, size, won</td></tr>
-<tr><td>sifeval returns equity.csv</td><td>daily account values</td></tr>
-<tr><td>sifeval wallet 0x...</td><td>any wallet in the dataset</td></tr>
-</tbody></table></div>
-<p>It carries the population's skill distribution in a 16 KB file, so it runs without the dataset.</p>
+<h2>7. The tool</h2>
+<p>All of this runs from a small Python package, <code>sifeval</code>, which carries the population's skill distribution in a 16 KB file so it runs without the dataset. It takes a file of trades (<code>sifeval eval trades.csv</code>), daily account values (<code>sifeval returns equity.csv</code>) or a wallet address (<code>sifeval wallet 0x...</code>), and returns the raw result, the result after removing luck, the range that could sit in, the chance the edge is real, how much more trading would settle it, and where the record ranks against the 124,064 wallets with 20 or more trades.</p>
 <p><strong>Code and README:</strong> <a href="https://github.com/AdvayMonga/sif-application-fall-2026">github.com/AdvayMonga/sif-application-fall-2026</a></p>
 
-<h2>Limits</h2>
-<ul>
-<li>The luck-adjusted number is an estimate. Figure 6 is the check that it tracks real money.</li>
-<li>One snapshot only. It shows who <em>has had</em> an edge, not who keeps it.</li>
-<li>The 12-number version of each wallet used for Figure 1 predicts worse than the full 26. It is a map, not a model.</li>
-</ul>
-
-<h2>Method</h2>
-<ul class="small">
-<li>Decoding: <code>trader_volume</code> is shares, <code>mean_tx_value</code> dollars; price = dollars ÷ shares. Time fields are milliseconds of the UTC day.</li>
-<li>Deconvolution: NPMLE by EM on a 401-point grid, noise sd √(0.87·p(1−p)/n) per wallet. Confident learning: class-conditional thresholds on out-of-fold probabilities.</li>
-<li>Models: HistGradientBoosting (300 iters, 31 leaves, L2 = 1), 5-fold stratified CV; permutation importance with 5 repeats; MLP denoising autoencoder (64-12-64, input noise σ = 0.3) on quantile-normalized features; UMAP (n_neighbors 40) + HDBSCAN (min cluster 3,000). Scripts: <code>analysis/ml_*.py</code>.</li>
-</ul>
 </div>"""
 open(ROOT + "memo_ml_artifact.html", "w").write(page); print("page written", len(page))
