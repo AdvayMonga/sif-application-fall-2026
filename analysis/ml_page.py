@@ -169,7 +169,7 @@ def umap_svg():
     return "".join(o) + "</svg>"
 
 FAM = pd.read_csv(OUT + "cluster_eval_family.csv")
-fam_rows = "".join(f"<tr><td>{r.family}</td><td>{r.wallets:,}</td><td>${r.notional_M:,.0f}M</td><td>{r.pnl_M:+.1f}</td><td>{r.edge_per_dollar:+.2f}</td><td>{r.p_positive:.0%}</td><td>{"positive" if r.p_positive > .95 else ("negative" if r.p_positive < .05 else "luck")}</td></tr>" for r in FAM.itertuples())
+fam_rows = "".join(f"<tr><td>{r.family}</td><td>{r.wallets:,}</td><td>${r.notional_M:,.0f}M</td><td>{r.pnl_M:+.1f}</td><td>{r.edge_per_dollar:+.2f}</td><td>{r.p_positive:.0%}</td><td>{"makes money" if r.p_positive > .95 else ("loses money" if r.p_positive < .05 else "no edge")}</td></tr>" for r in FAM.itertuples())
 MACH = FAM[FAM.family == "machines"].iloc[0]; FARM = FAM[FAM.family == "farm"].iloc[0]; RET = FAM[FAM.family == "retail"].iloc[0]
 CE = pd.read_csv(OUT + "cluster_eval.csv"); mach_prof = CE[CE.name.str.startswith("machines")].frac_profitable.mean()
 named = {0: "machines A", 11: "machines B", 3: "farm A", 13: "farm B", 14: "farm C", 8: "bust A", 10: "bust B"}
@@ -256,19 +256,30 @@ pre.card{{background:var(--paper);border:1px solid var(--line);border-left:4px s
 </ul>
 
 <h2>2. Which groups actually make money</h2>
-<p>Now the profit data goes back in. Each group is measured as one large record. The ranges come from resampling wallets, so wallets betting on the same events do not count as separate evidence.</p>
+<p>Now the profit data goes back in. This is a test of the grouping: if wallets that merely <em>trade</em> alike also turn out to <em>earn</em> alike, the grouping found something real. Each group is measured as one large record. The ranges come from resampling wallets, so wallets betting on the same events do not count as separate evidence.</p>
 {cluster_bars()}
-<div class="cap"><strong>Figure 2.</strong> Profit per dollar wagered, by group, with the 90% range. A tick means the group makes money with at least 95% confidence. A cross means it loses money with at least 95% confidence.</div>
+<div class="cap"><strong>Figure 2.</strong> Profit per dollar wagered, by group, with the 90% range. A tick means the group makes money with at least 95% confidence, a cross that it loses money with at least 95% confidence, and no mark that its trading edge cannot be told apart from zero.</div>
 <div class="tw"><table><thead><tr><th>group</th><th>wallets</th><th>notional</th><th>P&amp;L $M</th><th>edge ¢/$</th><th>P(edge&gt;0)</th><th>verdict</th></tr></thead><tbody>{fam_rows}</tbody></table></div>
 <ul>
 <li>The machines are the only group that clearly makes money: <strong>{MACH.edge_per_dollar:+.2f}¢ per dollar</strong> wagered, <strong>{MACH.pnl_M:+.1f}M</strong> in profit on ${MACH.notional_M:,.0f}M traded.</li>
-<li>The farms come out at zero ({FARM.edge_per_dollar:+.2f}¢). That is the right answer, because their trades are built to carry no risk. Their payoff is the platform's rewards, which are not in this data.</li>
+<li>The farms come out at zero ({FARM.edge_per_dollar:+.2f}¢), which is the right answer but needs care in reading. It does not mean they are gambling badly. It means they are not gambling at all: they buy at 99¢ or hedge both sides, so there is no trading edge to find. They are gaming the platform's reward programs, and the rewards are not in this dataset, so the money they actually make is invisible here.</li>
 <li>Ordinary traders lose {-RET.edge_per_dollar:.2f}¢ per dollar. The bust group loses {-FAM[FAM.family == "bust"].iloc[0].edge_per_dollar:.1f}¢.</li>
 <li>Only {mach_prof:.0%} of individual machine accounts made money, and the group still has a certain edge. A group can make money while most of its members lose.</li>
+<li>None of this needed the profit column to find the groups. That is the point of the test: behaviour alone sorted the population into one group with an edge and three without.</li>
 </ul>
 
 <h2>3. How skill is separated from luck</h2>
-<p>Every track record is part skill and part luck. With betting data the luck part can be measured, because a bet at 50¢ swings a lot and a bet at 97¢ barely moves. So we can work out how much a record could have swung on luck alone, and subtract it.</p>
+<p>Every track record is part skill and part luck. The usual problem is that nobody knows how big the luck part is. With betting data we do, and it does not require a model of the market.</p>
+<h3>Where the number for luck comes from</h3>
+<p>We never ask why a price moved. We only use how a bet pays. Buy one share at price p and there are two outcomes: you gain 1 - p, or you lose p. Nothing else can happen.</p>
+<ul>
+<li>If the price is a fair probability, the average profit is zero and the swing in profit per share is <strong>p(1-p)</strong>. At 50¢ that is 0.25. At 97¢ it is 0.03, about eight times smaller. This is arithmetic from the payoff, not a guess about markets.</li>
+<li>Over n bets the swings average out, so the luck in a whole record is <strong>p(1-p) / n</strong>. More trades means less luck, and trades at extreme prices carry less luck than trades near 50¢.</li>
+<li>Then we checked it against the data instead of trusting the formula. Among the 75,855 wallets that made exactly one bet, both the price paid and the outcome can be recovered. Their actual swing came to <strong>0.87 × p(1-p)</strong>, slightly under theory because some sold out before settlement rather than holding. The measured 0.87 is what the tool uses.</li>
+</ul>
+<p>So the market stays a black box, and that is fine. The rules of the bet are not a black box, and that is all the luck calculation needs.</p>
+<h3>And what is left over</h3>
+<p>Across all wallets, the spread of results is the spread of real skill plus the spread of luck. The luck half is now known, so subtracting it leaves the skill half: <strong>91% of wallets sit within one cent per share of zero</strong>, with thin tails either side. That tells us how rare a large real edge is in this population, which is what says how hard to discount a short record. Someone showing +40¢ over five bets is far more likely to be a lucky member of that 91% than a rare member of the tail.</p>
 {flow_svg()}
 <div class="cap"><strong>Figure 3.</strong> The five steps from a raw record to an answer.</div>
 <p>Run on a single wallet, that produces this:</p>
@@ -276,6 +287,7 @@ pre.card{{background:var(--paper);border:1px solid var(--line);border-left:4px s
 <p class="small">Both wallets look excellent on raw profit. The first one traded 2,072 times, so its result cannot be luck. The second traded once, so it tells us almost nothing, and the tool says so.</p>
 
 <h2>4. How each number was produced</h2>
+<p>Every step, in order: read and decode the raw columns, build 26 measures of behaviour, group wallets on those measures alone, score each group against profit, measure the luck in any record, subtract it, train a model to predict the result from behaviour, and check that model against money it never saw.</p>
 <h3>Reading the data</h3>
 <ul>
 <li>The volume column is in shares, not dollars. Dividing dollars by shares gives the price paid per share.</li>
