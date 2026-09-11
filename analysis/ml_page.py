@@ -325,9 +325,15 @@ ol.steps{{padding-left:20px}} ol.steps li{{margin-bottom:9px}} .dim{{color:var(-
 <li><strong>Check the whole thing.</strong> Train a model on the 26 behaviour measures to predict the luck-adjusted result, five-fold cross-validated: AUC {a50:.2f}, against {r50:.2f} for the dataset's own label. Then sort wallets by predicted skill and compare with profit the model never saw. <span class="dim">(Figures 4 to 6)</span></li>
 </ol>
 
-<h2>What the tool takes and returns</h2>
-<p>Give it a wallet address, a file of trades, or daily account values. It returns the raw result, the result after removing luck, the range that could sit in, the chance the edge is real, how much more trading would settle it, and where it ranks against the 124,064 wallets with 20 or more trades.</p>
-<p class="small">Code: <code>trackrecord/</code> (tool and tests), <code>analysis/</code> (everything above).</p>
+<h2>The tool</h2>
+<p>All of this runs from a small Python package, <code>trackrecord</code>. Give it a wallet address, a file of trades, or daily account values, and it returns the raw result, the result after removing luck, the range that could sit in, the chance the edge is real, how much more trading would settle it, and where the record ranks against the 124,064 wallets with 20 or more trades.</p>
+<div class="tw"><table><thead><tr><th>command</th><th>input</th></tr></thead><tbody>
+<tr><td>trackrecord eval trades.csv</td><td>a file of trades: price, size, won</td></tr>
+<tr><td>trackrecord returns equity.csv</td><td>daily account values</td></tr>
+<tr><td>trackrecord wallet 0x...</td><td>any wallet in the dataset</td></tr>
+</tbody></table></div>
+<p>It carries the population's skill distribution in a 16 KB file, so it runs on a new record without needing the dataset. Six tests cover it.</p>
+<p><strong>Code and README:</strong> <a href="https://github.com/AdvayMonga/sif-application-fall-2026">github.com/AdvayMonga/sif-application-fall-2026</a></p>
 
 <h2>Limits</h2>
 <ul>
