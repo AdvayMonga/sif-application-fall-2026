@@ -156,14 +156,14 @@ rows = "".join(f"<tr><td>{named.get(i, f'retail {i}')}</td><td>{int(r.wallets):,
 a20, a50 = auc["n>=20 | denoised skill"]["auc"], auc["n>=50 | denoised skill"]["auc"]; r50, p50 = auc["n>=50 | raw label sharp-vs-awful"]["auc"], auc["n>=50 | profit sign"]["auc"]
 top = led.iloc[-1]; lab = json.load(open(OUT + "labels_summary.json"))
 def rc(addr, title):
-    row = df[df.trader.str.lower() == addr.lower()].iloc[0]; return f'<p class="small" style="margin:14px 0 4px"><strong>{title}</strong></p><pre class="card">{card(evaluate(from_wallet_row(row)))}</pre>'
+    row = df[df.trader.str.lower() == addr.lower()].iloc[0]; return html_card(title, evaluate(from_wallet_row(row)))
 cards = rc("0x2728d99B2405a52db60160837E130B3ba3c1A83c", "The biggest winner in the file") + rc("0x99C538dB47a2cBc0A56EbF465309d678a6f7d406", "A one-trade wallet the dataset labels \"sharp\"") + \
         rc(df[(df.n >= 50) & (df.trader_label == "sharp")].sort_values("trader_pnl").iloc[len(df[(df.n >= 50) & (df.trader_label == "sharp")]) // 2].trader, "A typical 50+-trade wallet labeled \"sharp\"") + \
-        f'<p class="small" style="margin:14px 0 4px"><strong>The example CSV shipped with the tool</strong> (synthetic, 60 trades)</p><pre class="card">{card(evaluate(from_trades(pd.read_csv("/Users/advaymonga/Desktop/sif/sif-application-fall-2026/examples/sample_trades.csv"))))}</pre>'
+        html_card("A made-up 60-trade record, to show the tool on trade data", evaluate(from_trades(pd.read_csv("/Users/advaymonga/Desktop/sif/sif-application-fall-2026/examples/sample_trades.csv"))), note=" · example, not real")
 SL = json.load(open("/Users/advaymonga/Desktop/sif/sif-application-fall-2026/deliverables/siflive_dashboard_2026-09-08.json"))
 def sl(k):
     h = SL["history"][k]; eq = pd.Series(h["equity"], index=pd.to_datetime(h["timestamps"], unit="s")); r = eq.pct_change().dropna(); rep = evaluate_returns(r.values)
-    return rep, f'<p class="small" style="margin:14px 0 4px"><strong>SIF Live, {k} window</strong> ({eq.index[0].date()} → {eq.index[-1].date()}, ${eq.iloc[0]:,.0f} → ${eq.iloc[-1]:,.0f})</p><pre class="card">{card_returns(rep, "day")}</pre>'
+    return rep, html_card_returns("SIF Live — " + ("the past year" if k == "1Y" else "the past three months"), rep, f"{eq.index[0].date()} to {eq.index[-1].date()} · ${eq.iloc[0]:,.0f} to ${eq.iloc[-1]:,.0f}")
 rep1y, card1y = sl("1Y"); rep3m, card3m = sl("3M"); yrs = rep1y["periods_needed_for_95pct"] / 252
 P_ = pd.DataFrame(SL["positions"]); P_["mv"] = P_.market_value.astype(float); P_["upl"] = P_.unrealized_pl.astype(float); P_["px"] = P_.current_price.astype(float)
 pos_n = len(P_); pos_win = int((P_.upl > 0).sum()); gross = P_.mv.abs().sum(); net = P_.mv.sum(); shorts = P_[P_.side == "short"]; cheap_shorts = int((shorts.px < 10).sum())
