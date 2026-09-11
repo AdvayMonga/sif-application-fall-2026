@@ -228,13 +228,13 @@ a{{color:var(--sif-red);text-decoration:none;border-bottom:1px solid transparent
 th,td{{padding:5px 9px;text-align:right;border-bottom:1px solid var(--soft-line);white-space:nowrap}} th{{color:var(--sif-red);font-weight:700;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;border-bottom:1px solid var(--line)}}
 td:first-child,th:first-child{{text-align:left;white-space:normal}} td{{font-family:var(--font-num)}} td:first-child{{font-family:var(--font-ui)}}
 pre.card{{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--sif-red);padding:12px 14px;font:12.5px/1.5 var(--font-num);overflow-x:auto;white-space:pre-wrap;margin:0 0 8px;color:var(--ink)}}
-.rc{{background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--sif-red);margin:0 0 10px}}
-.rc-h{{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:8px 13px;border-bottom:1px solid var(--soft-line)}}
-.rc-t{{font-weight:600;font-size:.98rem}} .rc-s{{color:var(--muted);font-size:.8rem;font-family:var(--font-num);margin-top:3px}}
-.badge{{font-size:.62rem;font-weight:700;letter-spacing:.1em;padding:4px 9px;white-space:nowrap;border:1px solid currentColor}}
+.rc{{background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--sif-red);margin:0 0 8px}}
+.rc-h{{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:6px 11px;border-bottom:1px solid var(--soft-line)}}
+.rc-t{{font-weight:600;font-size:.85rem}} .rc-s{{color:var(--muted);font-size:.7rem;font-family:var(--font-num);margin-top:2px}}
+.badge{{font-size:.55rem;font-weight:700;letter-spacing:.08em;padding:3px 7px;white-space:nowrap;border:1px solid currentColor}}
 .badge.gain{{color:var(--positive)}} .badge.loss{{color:var(--negative)}} .badge.warn{{color:var(--muted)}}
-.rc-g{{display:grid;grid-template-columns:minmax(150px,34%) 1fr;gap:0}} .rc-g>div{{padding:5px 13px;border-bottom:1px solid var(--soft-line)}}
-.rc-g>div:nth-last-child(-n+2){{border-bottom:none}} .rc-g .k{{color:var(--muted);font-size:.8rem}} .rc-g .v{{font-family:var(--font-num);font-size:.84rem;font-variant-numeric:tabular-nums}}
+.rc-g{{display:grid;grid-template-columns:minmax(130px,30%) 1fr;gap:0}} .rc-g>div{{padding:3px 11px;border-bottom:1px solid var(--soft-line)}}
+.rc-g>div:nth-last-child(-n+2){{border-bottom:none}} .rc-g .k{{color:var(--muted);font-size:.7rem}} .rc-g .v{{font-family:var(--font-num);font-size:.72rem;font-variant-numeric:tabular-nums;line-height:1.35}}
 .rc-g .dim{{color:var(--muted)}}
 ol.steps{{padding-left:20px}} ol.steps li{{margin-bottom:5px}} .dim{{color:var(--muted)}}
 .lead{{font-size:.97rem;margin:0 0 9px}} .lead:first-of-type{{margin-top:4px}}
