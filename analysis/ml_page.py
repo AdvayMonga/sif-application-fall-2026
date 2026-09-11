@@ -237,13 +237,17 @@ pre.card{{background:var(--paper);border:1px solid var(--line);border-left:4px s
 .rc-g>div:nth-last-child(-n+2){{border-bottom:none}} .rc-g .k{{color:var(--muted);font-size:.8rem}} .rc-g .v{{font-family:var(--font-num);font-size:.84rem;font-variant-numeric:tabular-nums}}
 .rc-g .dim{{color:var(--muted)}}
 ol.steps{{padding-left:20px}} ol.steps li{{margin-bottom:9px}} .dim{{color:var(--muted)}}
+.lead{{font-size:1.02rem;margin:0 0 12px}} .lead:first-of-type{{margin-top:4px}}
 .dfn{{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--muted);padding:10px 14px;margin:0 0 14px;font-size:.88rem}}
 .small{{font-size:.82rem;color:var(--muted)}} code{{font-family:var(--font-num);font-size:.85em;background:var(--paper);border:1px solid var(--soft-line);padding:1px 5px}}
 @media (prefers-reduced-motion: reduce){{*{{transition:none}}}}
 </style>
 <div class="wrap">
 <div class="topbar"><p class="kicker">Smith Investment Fund · Skill or luck?</p><h1>SIF Application, Fall 2026</h1>
-<p class="sub">Advay Monga · 604,578 Polymarket wallets. Telling traders with a real edge apart from traders who got lucky.</p></div>
+<p class="sub">Advay Monga · 604,578 Polymarket wallets.</p></div>
+
+<p class="lead">Every track record is part skill and part luck, and normally there is no way to tell how much of each. Betting data is the exception. The luck in a bet follows from the price paid, so it can be calculated and subtracted, and whatever is left is skill.</p>
+<p class="lead">I built a tool that does this, then pointed it at the wallets, at the groups they fall into, and at SIF Live's own trading account. Section 4 shows the calculation.</p>
 
 <h2>1. The dataset, grouped by how people trade</h2>
 <p>Each row is one wallet: how often it traded, how big its bets were, at what prices, at what times, and how much it made. I grouped wallets on the first four and ignored the last.</p>
@@ -279,8 +283,8 @@ ol.steps{{padding-left:20px}} ol.steps li{{margin-bottom:9px}} .dim{{color:var(-
 <li><strong>One design choice to test.</strong> The strategy buys stocks that fell too far, then sells if they fall another 5%. The stop fires when its own logic says the bounce is closest.</li>
 </ul>
 
-<h2>4. How luck is measured</h2>
-<p>We never ask why a price moved. We use how a bet pays. Buy a share at price p and you either gain 1 - p or lose p. Nothing else can happen.</p>
+<h2>4. How skill is separated from luck</h2>
+<p>This is the calculation everything above rests on. We never ask why a price moved. We use how a bet pays. Buy a share at price p and you either gain 1 - p or lose p. Nothing else can happen.</p>
 <ul>
 <li>If the price is a fair probability, the swing in profit per share is <strong>p(1-p)</strong>. At 50¢ that is 0.25, at 97¢ it is 0.03.</li>
 <li>Over n bets, luck is <strong>p(1-p) / n</strong>. More trades, less luck.</li>
