@@ -1,14 +1,15 @@
 """Build the ML memo page (v3): out-of-fold skill scores, SVG figures, published as its own artifact."""
-import json, re, sys, math, numpy as np, pandas as pd
+import json, sys, math, pathlib, numpy as np, pandas as pd
 from common import load
-sys.path.insert(0, "/Users/advaymonga/Desktop/sif/sif-application-fall-2026")
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 from sifeval import evaluate, from_wallet_row, from_trades
 from sifeval.cli import card, card_extra
 from sifeval.diagnostics import extra_fronts
 from sifeval.returns import evaluate_returns, card_returns
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.model_selection import StratifiedKFold
-OUT = "/Users/advaymonga/Desktop/sif/sif-application-fall-2026/analysis/out/ml/"; ROOT = "/Users/advaymonga/Desktop/sif/sif-application-fall-2026/analysis/out/"
+REPO = pathlib.Path(__file__).resolve().parent.parent
+OUT = str(REPO / "analysis/out/ml") + "/"; ROOT = str(REPO / "analysis/out") + "/"
 df = load(); F = pd.read_parquet(OUT + "features.parquet"); post = pd.read_parquet(ROOT + "skill_posterior.parquet").set_index("trader")
 df["p_pos"] = post.p_positive.reindex(df.trader).values; feats = [c for c in F.columns if c not in ("trader", "int_shares_single")]; X = F[feats].values.astype(np.float32)
 # out-of-fold skill scores for every n>=50 wallet: extremes get their held-out fold score, middle wallets get the fold-average
@@ -23,7 +24,6 @@ dec = pd.qcut(d.score.rank(method="first"), 10, labels=False)
 led = d.groupby(dec).apply(lambda x: pd.Series({"wallets": len(x), "c_per_dollar": 100 * x.trader_pnl.sum() / x.notional.sum(), "frac_profitable": (x.trader_pnl > 0).mean(), "notional_M": x.notional.sum() / 1e6, "pnl_M": x.trader_pnl.sum() / 1e6}))
 led.to_csv(OUT + "skill_deciles_oof.csv"); print(led.round(2).to_string())
 auc = json.load(open(OUT + "skill_auc.json")); attr = pd.read_csv(OUT + "skill_attribution.csv"); ct = pd.read_csv(OUT + "active_cluster_table.csv", index_col=0)
-css = re.search(r"<style>.*?</style>", open(ROOT + "memo_edge_artifact.html").read(), re.S).group(0)
 pct = lambda x, dd=1: f"{100*x:.{dd}f}%"
 
 def grouped_auc():
@@ -183,7 +183,7 @@ card_oneshot = rc("0x99C538dB47a2cBc0A56EbF465309d678a6f7d406", 'A wallet that m
 mid_sharp0 = df[(df.n >= 50) & (df.trader_label == "sharp")].sort_values("trader_pnl"); mid_addr0 = mid_sharp0.iloc[len(mid_sharp0) // 2].trader
 card_typical = rc(mid_addr0, 'A typical wallet with 50+ trades, also labelled "sharp"')
 
-SL = json.load(open("/Users/advaymonga/Desktop/sif/sif-application-fall-2026/deliverables/siflive_dashboard_2026-09-08.json"))
+SL = json.load(open(str(REPO / "data/siflive_dashboard_2026-09-08.json")))
 def sl(k):
     h = SL["history"][k]; eq = pd.Series(h["equity"], index=pd.to_datetime(h["timestamps"], unit="s")); r = eq.pct_change().dropna(); rep = evaluate_returns(r.values)
     return rep, html_card_returns("SIF Live: " + ("the past year" if k == "1Y" else "the past three months"), rep, f"{eq.index[0].date()} to {eq.index[-1].date()} · ${eq.iloc[0]:,.0f} to ${eq.iloc[-1]:,.0f}")
@@ -195,7 +195,7 @@ def srow(name, addr=None, trades_df=None):
     return f"<tr><td>{name}</td><td>{agg['n']:,}</td><td>{100*agg['edge_per_share']:+.1f}¢/sh</td><td>{100*p['mean']:+.2f}¢/sh</td><td>{p['p_meaningful_positive']:.0%}</td><td>{rp['verdict'].split(':')[0]}</td></tr>"
 mid_sharp = df[(df.n >= 50) & (df.trader_label == "sharp")].sort_values("trader_pnl"); mid_addr = mid_sharp.iloc[len(mid_sharp) // 2].trader
 summary_rows = srow("biggest winner in the file", "0x2728d99B2405a52db60160837E130B3ba3c1A83c") + srow('one-trade wallet labeled "sharp"', "0x99C538dB47a2cBc0A56EbF465309d678a6f7d406") + srow('typical 50+-trade wallet labeled "sharp"', mid_addr) + \
-               srow("example CSV (synthetic)", trades_df=pd.read_csv("/Users/advaymonga/Desktop/sif/sif-application-fall-2026/examples/sample_trades.csv")) + \
+               srow("example CSV (synthetic)", trades_df=pd.read_csv(str(REPO / "examples/sample_trades.csv"))) + \
                f"<tr><td>SIF Live, 1Y (returns mode)</td><td>{rep1y['n_periods']} days</td><td>{rep1y['annualized_return']:+.1%}/yr</td><td>Sharpe {rep1y['sharpe']:.2f}</td><td>{rep1y['p_positive']:.0%}</td><td>{rep1y['verdict'].split(':')[0]}</td></tr>" + \
                f"<tr><td>SIF Live, 3M (returns mode)</td><td>{rep3m['n_periods']} days</td><td>{rep3m['annualized_return']:+.1%}/yr</td><td>Sharpe {rep3m['sharpe']:.2f}</td><td>{rep3m['p_positive']:.0%}</td><td>{rep3m['verdict'].split(':')[0]}</td></tr>"
 

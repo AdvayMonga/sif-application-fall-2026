@@ -1,9 +1,10 @@
 """Run the evaluator on each discovered cluster, treating the cluster as one pooled record; CI by resampling wallets."""
+import pathlib
 import json, sys, numpy as np, pandas as pd
-sys.path.insert(0, "/Users/advaymonga/Desktop/sif/sif-application-fall-2026")
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 from common import load
 from sifeval.core import posterior, load_reference
-OUT = "/Users/advaymonga/Desktop/sif/sif-application-fall-2026/analysis/out/ml/"
+OUT = str(pathlib.Path(__file__).resolve().parent / "out/ml") + "/"
 NAMES = {0: "machines A", 11: "machines B", 3: "farm A", 13: "farm B", 14: "farm C", 8: "bust A", 10: "bust B"}
 
 df = load(); C = pd.read_parquet(OUT + "active_clusters.parquet")

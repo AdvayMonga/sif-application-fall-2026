@@ -1,4 +1,5 @@
 """Steps 3-6 redone on ACTIVE wallets (n>=20): AE embedding, HDBSCAN species, blind validation, ledger, probes (profit + deconvolved skill)."""
+import pathlib
 import numpy as np, pandas as pd, json
 from common import load, singles
 from sklearn.preprocessing import QuantileTransformer, StandardScaler
@@ -10,7 +11,7 @@ from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.model_selection import cross_val_score, StratifiedKFold
 from sklearn.pipeline import make_pipeline
 import umap
-OUT = "/Users/advaymonga/Desktop/sif/sif-application-fall-2026/analysis/out/ml/"
+OUT = str(pathlib.Path(__file__).resolve().parent / "out/ml") + "/"
 df = load(); F = pd.read_parquet(OUT + "features.parquet"); act = (df.n >= 20).values
 A = df[act].reset_index(drop=True); X = F[act].drop(columns=["trader", "int_shares_single"]).values.astype(np.float32); feats = list(F.drop(columns=["trader", "int_shares_single"]).columns)
 Z = QuantileTransformer(n_quantiles=1000, output_distribution="normal", random_state=0).fit_transform(X).astype(np.float32)
@@ -28,7 +29,7 @@ np.save(OUT + "active_umap.npy", U); np.save(OUT + "active_embedding.npy", E); p
 s = singles(df); key = s.mean_time.astype(int).astype(str) + "|" + s.p.round(3).astype(str) + "|" + s.dom
 A["ev_bot_clock"] = (A.std_time / 3.6e6).between(6.3, 7.6) & (A.mean_time / 3.6e6).between(10.5, 13.5)
 A["ev_zero_pnl_maker"] = (A.price_levels_per_transaction == 0) & (A.trader_pnl.abs() <= 0.001 * A.notional)
-post = pd.read_parquet("/Users/advaymonga/Desktop/sif/sif-application-fall-2026/analysis/out/skill_posterior.parquet").set_index("trader")
+post = pd.read_parquet(str(pathlib.Path(__file__).resolve().parent / "out/skill_posterior.parquet")).set_index("trader")
 A["p_pos"] = post.p_positive.reindex(A.trader).values; A["ev_skilled"] = A.p_pos > 0.99; A["ev_anti"] = A.p_pos < 0.01
 A["ev_bust"] = (A.trader_pnl < 0) & (-A.trader_pnl >= 0.98 * A.notional); A["profitable"] = A.trader_pnl > 0
 ev = ["ev_bot_clock", "ev_zero_pnl_maker", "ev_skilled", "ev_anti", "ev_bust"]

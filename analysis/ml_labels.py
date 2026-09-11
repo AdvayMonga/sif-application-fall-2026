@@ -1,11 +1,12 @@
 """Step 5: confident learning on trader_label using behavior-only features; retrain on cleaned labels; compare what the model learns."""
+import pathlib
 import numpy as np, pandas as pd, json
 from common import load
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import accuracy_score, roc_auc_score
 from sklearn.inspection import permutation_importance
-OUT = "/Users/advaymonga/Desktop/sif/sif-application-fall-2026/analysis/out/ml/"
+OUT = str(pathlib.Path(__file__).resolve().parent / "out/ml") + "/"
 df = load(); F = pd.read_parquet(OUT + "features.parquet"); X = F.drop(columns="trader").values.astype(np.float32); feats = list(F.drop(columns="trader").columns)
 y = df.trader_label.map({"awful": 0, "bad": 1, "good": 2, "sharp": 3}).values
 oof = np.zeros((len(y), 4))

@@ -1,12 +1,13 @@
 """Supervised skill model on active wallets: denoised target vs raw label (same wallets, same features), attribution, direction."""
+import pathlib
 import numpy as np, pandas as pd, json
 from common import load
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.model_selection import StratifiedKFold, cross_val_predict
 from sklearn.metrics import roc_auc_score
 from sklearn.inspection import permutation_importance, partial_dependence
-OUT = "/Users/advaymonga/Desktop/sif/sif-application-fall-2026/analysis/out/ml/"
-df = load(); F = pd.read_parquet(OUT + "features.parquet"); post = pd.read_parquet("/Users/advaymonga/Desktop/sif/sif-application-fall-2026/analysis/out/skill_posterior.parquet").set_index("trader")
+OUT = str(pathlib.Path(__file__).resolve().parent / "out/ml") + "/"
+df = load(); F = pd.read_parquet(OUT + "features.parquet"); post = pd.read_parquet(str(pathlib.Path(__file__).resolve().parent / "out/skill_posterior.parquet")).set_index("trader")
 df["p_pos"] = post.p_positive.reindex(df.trader).values
 feats = [c for c in F.columns if c not in ("trader", "int_shares_single")]; X = F[feats].values.astype(np.float32)
 cv = StratifiedKFold(5, shuffle=True, random_state=0); mk = lambda: HistGradientBoostingClassifier(max_iter=300, learning_rate=0.06, max_leaf_nodes=31, l2_regularization=1.0, random_state=0)

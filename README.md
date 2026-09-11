@@ -53,9 +53,10 @@ Combining the three gives the luck-adjusted edge, a 90% range, the chance the ed
 | path | what |
 |---|---|
 | `sifeval/` | the tool. `core.py` scores a record, `features.py` turns trades or a dataset row into inputs, `returns.py` handles P&L series, `diagnostics.py` the extra checks, `reference.json` the population prior |
-| `analysis/` | how everything was produced. `common.py` decodes the raw columns, `skill_luck.py` removes luck from the population, `ml_features.py` and `ml_active.py` build and group the behaviour measures, `cluster_eval.py` scores each group, `ml_skill.py` trains and checks the model, `ml_page.py` builds the report |
+| `analysis/` | how everything was produced, in run order: `common.py` decodes the raw columns, `skill_luck.py` removes luck from the population, `build_reference.py` writes the tool's prior, `ml_features.py` builds 26 behaviour measures, `ml_active.py` groups the wallets, `cluster_eval.py` scores each group, `ml_labels.py` checks the dataset's own labels, `ml_skill.py` trains and checks the model, `ml_page.py` builds the report |
 | `tests/` | pytest for the tool |
 | `examples/` | sample inputs, both synthetic and labelled as such |
+| `data/` | SIF Live's public dashboard snapshot, used by the report |
 
 `data.parquet`, `analysis/out/` and `deliverables/` are not committed.
 
@@ -63,7 +64,7 @@ Combining the three gives the luck-adjusted edge, a 90% range, the chance the ed
 
 ```bash
 uv venv --python 3.12 .venv
-uv pip install --python .venv/bin/python pandas pyarrow numpy scipy scikit-learn matplotlib umap-learn pytest pymupdf
+uv pip install --python .venv/bin/python -r requirements.txt
 .venv/bin/python -m pytest tests          # the tool
 
 cd analysis                               # the analysis, in order
@@ -72,6 +73,7 @@ cd analysis                               # the analysis, in order
 ../.venv/bin/python ml_features.py        # 26 behaviour measures per wallet
 ../.venv/bin/python ml_active.py          # group the wallets
 ../.venv/bin/python cluster_eval.py       # score each group
+../.venv/bin/python ml_labels.py          # check the dataset's own labels
 ../.venv/bin/python ml_skill.py           # train and check the model
 ../.venv/bin/python ml_page.py            # build the report
 ```

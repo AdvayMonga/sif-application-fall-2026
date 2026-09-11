@@ -1,9 +1,10 @@
 """Nonparametric deconvolution of true skill (Kiefer-Wolfowitz NPMLE via EM) + robustness."""
+import pathlib
 import sys, numpy as np, pandas as pd
 from scipy.stats import norm, t as student_t
 from common import load, noise_constant
 
-OUT = "/Users/advaymonga/Desktop/sif/sif-application-fall-2026/analysis/out/"
+OUT = str(pathlib.Path(__file__).resolve().parent / "out") + "/"
 GRID = np.linspace(-1.0, 1.0, 401)   # covers the full ppv support (clipped at ±0.999)
 SHARP, AWFUL = 0.0399, -0.0694
 

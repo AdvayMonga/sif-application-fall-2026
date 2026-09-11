@@ -1,7 +1,7 @@
-"""Load the SIF parquet and decode its undocumented columns (see sif/CLAUDE.md)."""
-import numpy as np, pandas as pd
+"""Load the dataset and decode its undocumented columns."""
+import pathlib, numpy as np, pandas as pd
 
-DATA = "/Users/advaymonga/Desktop/sif/sif-application-fall-2026/data.parquet"
+DATA = str(pathlib.Path(__file__).resolve().parent.parent / "data.parquet")
 TOPICS = None
 
 

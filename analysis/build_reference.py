@@ -1,8 +1,9 @@
 """Distill the population reference the eval harness needs (prior over true edge, noise constant, percentile tables) into sifeval/reference.json."""
+import pathlib
 import json, numpy as np, pandas as pd
 from common import load, noise_constant
 from skill_luck import GRID, run
-OUT = "/Users/advaymonga/Desktop/sif/sif-application-fall-2026/"
+OUT = str(pathlib.Path(__file__).resolve().parent.parent) + "/"
 df = load(); k = noise_constant(df); d = df[df.n >= 2]
 w, _ = run(d, k, "gauss")                                         # NPMLE prior over true edge (per share)
 act = df[df.n >= 20]; q = np.linspace(0, 1, 101)

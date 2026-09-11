@@ -1,7 +1,8 @@
 """Step 1: behavior-only wallet features (nothing derived from pnl/ppv/label). Writes out/ml/features.parquet."""
+import pathlib
 import numpy as np, pandas as pd
 from common import load
-OUT = "/Users/advaymonga/Desktop/sif/sif-application-fall-2026/analysis/out/ml/"
+OUT = str(pathlib.Path(__file__).resolve().parent / "out/ml") + "/"
 df = load()
 tp = [c for c in df if c.startswith("topic_")]
 F = pd.DataFrame(index=df.index)

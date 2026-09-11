@@ -1,6 +1,7 @@
-# data (not redistributable, 111 MB)
+# the dataset itself (not redistributable, 111 MB)
 data.parquet
 *.parquet
+# note: data/ holds small public inputs and IS committed
 # environments & caches
 .venv/
 __pycache__/
