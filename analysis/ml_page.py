@@ -329,8 +329,7 @@ ol.steps{{padding-left:20px}} ol.steps li{{margin-bottom:5px}} .dim{{color:var(-
 </ol>
 
 <h2>7. The tool</h2>
-<p>All of this runs from a small Python package, <code>sifeval</code>, which carries the population's skill distribution in a 16 KB file so it runs without the dataset. It takes a file of trades (<code>sifeval eval trades.csv</code>), daily account values (<code>sifeval returns equity.csv</code>) or a wallet address (<code>sifeval wallet 0x...</code>), and returns the raw result, the result after removing luck, the range that could sit in, the chance the edge is real, how much more trading would settle it, and where the record ranks against the 124,064 wallets with 20 or more trades.</p>
-<p><strong>Code and README:</strong> <a href="https://github.com/AdvayMonga/sif-application-fall-2026">github.com/AdvayMonga/sif-application-fall-2026</a></p>
+<p>All of this runs from a small Python package, <code>sifeval</code>, which carries the population's skill distribution in a 16 KB file so it runs without the dataset. It takes a file of trades (<code>sifeval eval trades.csv</code>), daily account values (<code>sifeval returns equity.csv</code>) or a wallet address (<code>sifeval wallet 0x...</code>), and returns the raw result, the result after removing luck, the range that could sit in, the chance the edge is real, how much more trading would settle it, and where the record ranks against the 124,064 wallets with 20 or more trades. Code and README: <a href="https://github.com/AdvayMonga/sif-application-fall-2026">github.com/AdvayMonga/sif-application-fall-2026</a></p>
 
 </div>"""
 open(ROOT + "memo_ml_artifact.html", "w").write(page); print("page written", len(page))
