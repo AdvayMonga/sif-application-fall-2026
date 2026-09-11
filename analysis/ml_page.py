@@ -68,15 +68,15 @@ def flow_svg():
              ("How much real skill exists at all?", "91% of wallets sit within ±1¢ of zero", "Recovered from all 604,578 wallets by subtracting that luck from the spread of results."),
              ("Combine the two", "range of real edges that fit this record", "A short record with a big result is pulled towards zero. A long record is left alone."),
              ("What comes out", "edge · chance it is real · record still needed", "The same three answers for a wallet, a file of trades, or a series of daily account values.")]
-    W, BW, BH, GAP, L = 820, 700, 62, 18, 60
+    W, BW, BH, GAP, L = 820, 700, 54, 13, 60
     H = 16 + len(steps) * (BH + GAP)
     o = [f'<svg viewBox="0 0 {W} {H}" class="chart" role="img" aria-label="How the luck adjustment works">']
     for i, (t, mid, sub) in enumerate(steps):
         y = 8 + i * (BH + GAP)
         o.append(f'<rect x="{L}" y="{y}" width="{BW}" height="{BH}" class="fbox"/><rect x="{L}" y="{y}" width="4" height="{BH}" class="bar"/>')
-        o.append(f'<text x="{L+16}" y="{y+19}" class="lbl strong">{i+1}. {t}</text>')
-        o.append(f'<text x="{L+16}" y="{y+36}" class="flow-mid">{mid}</text>')
-        o.append(f'<text x="{L+16}" y="{y+53}" class="tick">{sub}</text>')
+        o.append(f'<text x="{L+16}" y="{y+18}" class="lbl strong">{i+1}. {t}</text>')
+        o.append(f'<text x="{L+16}" y="{y+34}" class="flow-mid">{mid}</text>')
+        o.append(f'<text x="{L+16}" y="{y+48}" class="tick">{sub}</text>')
         if i < len(steps) - 1:
             cx = L + BW / 2
             o.append(f'<line x1="{cx}" x2="{cx}" y1="{y+BH}" y2="{y+BH+GAP-8}" class="axis"/><path d="M{cx-5},{y+BH+GAP-12} L{cx},{y+BH+GAP-4} L{cx+5},{y+BH+GAP-12}" class="arrow"/>')
@@ -159,7 +159,7 @@ def umap_svg():
     U = np.load(OUT + "active_umap.npy"); C = pd.read_parquet(OUT + "active_clusters.parquet"); A = df[df.n >= 20].reset_index(drop=True)
     grp = {0: "machines", 11: "machines", 3: "farms", 13: "farms", 14: "farms", 8: "bust", 10: "bust"}; g = C.cluster.map(grp).fillna("retail")
     rng = np.random.default_rng(0); sub = rng.choice(len(U), 14000, replace=False)
-    W, H = 680, 380; x0, x1 = np.percentile(U[:, 0], [0.5, 99.5]); y0, y1 = np.percentile(U[:, 1], [0.5, 99.5])
+    W, H = 680, 320; x0, x1 = np.percentile(U[:, 0], [0.5, 99.5]); y0, y1 = np.percentile(U[:, 1], [0.5, 99.5])
     cls = {"machines": "acc", "farms": "p-farm", "bust": "p-bust", "retail": "ref"}; o = [f'<svg viewBox="0 0 {W} {H}" class="chart" role="img" aria-label="UMAP of active wallets">']
     for i in sub[np.argsort([g.iloc[i] == "retail" for i in sub])[::-1]]:
         px = 20 + (W - 40) * (U[i, 0] - x0) / (x1 - x0); py = 20 + (H - 60) * (1 - (U[i, 1] - y0) / (y1 - y0))
@@ -318,14 +318,14 @@ ol.steps{{padding-left:20px}} ol.steps li{{margin-bottom:5px}} .dim{{color:var(-
 
 <h2>6. Every step, in order</h2>
 <ol class="steps">
-<li><strong>Decode the raw columns.</strong> The volume column is shares, not dollars, so price = dollars ÷ shares. The time columns are milliseconds into the day. For wallets with one trade, profit matches a settlement payout 85% of the time, so that bet's outcome is recoverable.</li>
-<li><strong>Build 26 measures of behaviour per wallet.</strong> Trade count and frequency, bet size and how much it varies, prices traded, time of day and its spread, how much of the order book each trade eats, topic mix. Profit, profit per share and the dataset's label are excluded.</li>
-<li><strong>Group the wallets.</strong> Normalise the 26 measures, compress to 12 numbers with a denoising autoencoder, reduce to 2 axes with UMAP, then find groups with HDBSCAN. 124,064 wallets with 20 or more trades. <span class="dim">(Figure 1)</span></li>
-<li><strong>Score each group.</strong> Pool its wallets into one record and compute profit per dollar. The 90% range comes from resampling wallets 2,000 times, so wallets betting on the same events do not count separately. <span class="dim">(Figure 2)</span></li>
-<li><strong>Measure luck.</strong> Profit per share swings by p(1-p) per bet and p(1-p)/n over a record. The multiplier 0.87 is fitted on the 75,855 one-bet wallets rather than assumed.</li>
-<li><strong>Remove luck from the population.</strong> Subtracting that swing from the spread of everyone's results leaves the spread of real skill: 91% of wallets within one cent per share of zero.</li>
-<li><strong>Score a single record.</strong> Combine its result, its own luck size and that population spread. Out comes the luck-adjusted edge, a 90% range, the chance the edge is real, and how much more trading would settle it. <span class="dim">(Figure 3)</span></li>
-<li><strong>Check the whole thing.</strong> Train a model on the 26 behaviour measures to predict the luck-adjusted result, five-fold cross-validated: AUC {a50:.2f}, against {r50:.2f} for the dataset's own label. Then sort wallets by predicted skill and compare with profit the model never saw. <span class="dim">(Figures 4 and 5)</span></li>
+<li><strong>Decode the raw columns.</strong> Volume is shares, not dollars, so price = dollars ÷ shares. Times are milliseconds into the day. For one-trade wallets the profit matches a settlement payout 85% of the time, so that bet's outcome is recoverable.</li>
+<li><strong>Build 26 behaviour measures per wallet.</strong> Trade count and frequency, bet size and its variation, prices, time of day and its spread, order-book aggression, topic mix. Profit and the dataset's label are excluded.</li>
+<li><strong>Group the wallets.</strong> Normalise, compress to 12 numbers with a denoising autoencoder, reduce to 2 axes with UMAP, find groups with HDBSCAN. <span class="dim">(Figure 1)</span></li>
+<li><strong>Score each group.</strong> Pool its wallets into one record. The 90% range comes from resampling wallets 2,000 times. <span class="dim">(Figure 2)</span></li>
+<li><strong>Measure luck.</strong> Profit per share swings by p(1-p) per bet and p(1-p)/n over a record. The 0.87 multiplier is fitted on the 75,855 one-bet wallets, not assumed.</li>
+<li><strong>Remove luck from the population.</strong> Subtracting that swing leaves the spread of real skill: 91% of wallets within one cent per share of zero.</li>
+<li><strong>Score a single record.</strong> Combine its result, its own luck size and that population spread. <span class="dim">(Figure 3)</span></li>
+<li><strong>Check the whole thing.</strong> Predict the luck-adjusted result from behaviour alone, five-fold cross-validated: AUC {a50:.2f}, against {r50:.2f} for the dataset's own label. Then sort wallets by predicted skill and compare with profit the model never saw. <span class="dim">(Figures 4 and 5)</span></li>
 </ol>
 
 <h2>7. The tool</h2>
