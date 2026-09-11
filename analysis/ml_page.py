@@ -61,6 +61,27 @@ def deciles():
     o.append(f'<text x="{L}" y="{H-2}" class="tick">← predicted least skilled</text><text x="{W-16}" y="{H-2}" class="tick" text-anchor="end">predicted most skilled →</text>')
     return "".join(o) + "</svg>"
 
+def flow_svg():
+    """How a record becomes a luck-adjusted edge."""
+    steps = [("The record", "2,072 trades · +44¢ profit per dollar", "Everything one wallet, account or strategy actually did."),
+             ("How much of that could be luck?", "spread of luck = 0.87 · p(1−p) / n", "Known exactly for betting data: it shrinks with the number of trades, and grows the closer the prices are to 50¢."),
+             ("How much real skill exists at all?", "91% of wallets sit within ±1¢ of zero", "Recovered from all 604,578 wallets by subtracting that luck from the spread of results."),
+             ("Combine the two", "range of real edges that fit this record", "A short record with a big result is pulled towards zero. A long record is left alone."),
+             ("What comes out", "edge · chance it is real · record still needed", "The same three answers for a wallet, a file of trades, or a series of daily account values.")]
+    W, BW, BH, GAP, L = 820, 700, 78, 26, 60
+    H = 16 + len(steps) * (BH + GAP)
+    o = [f'<svg viewBox="0 0 {W} {H}" class="chart" role="img" aria-label="How the luck adjustment works">']
+    for i, (t, mid, sub) in enumerate(steps):
+        y = 8 + i * (BH + GAP)
+        o.append(f'<rect x="{L}" y="{y}" width="{BW}" height="{BH}" class="fbox"/><rect x="{L}" y="{y}" width="4" height="{BH}" class="bar"/>')
+        o.append(f'<text x="{L+18}" y="{y+24}" class="lbl strong">{i+1}. {t}</text>')
+        o.append(f'<text x="{L+18}" y="{y+44}" class="flow-mid">{mid}</text>')
+        o.append(f'<text x="{L+18}" y="{y+64}" class="tick">{sub}</text>')
+        if i < len(steps) - 1:
+            cx = L + BW / 2
+            o.append(f'<line x1="{cx}" x2="{cx}" y1="{y+BH}" y2="{y+BH+GAP-8}" class="axis"/><path d="M{cx-5},{y+BH+GAP-12} L{cx},{y+BH+GAP-4} L{cx+5},{y+BH+GAP-12}" class="arrow"/>')
+    return "".join(o) + "</svg>"
+
 def badge(v):
     k = "gain" if v.startswith("skilled") else ("loss" if v.startswith(("losing", "negative")) else "warn")
     txt = {"gain": "REAL EDGE", "loss": "REAL NEGATIVE EDGE", "warn": "NOT PROVEN"}[k]
@@ -72,18 +93,18 @@ def rowsf(pairs):
 def html_card(title, rep, note=""):
     a, p, q = rep["inputs"], rep["posterior"], rep["percentiles_vs_active_wallets"]
     need = rep["trades_needed_for_95pct"]
-    more = "not applicable — the edge is not positive" if math.isinf(need) else ("none — already conclusive" if need <= a["n"] else f"{need - a['n']:,} more trades (about {need:,} in total)")
+    more = "not applicable, the edge is not positive" if math.isinf(need) else ("none, already conclusive" if need <= a["n"] else f"{need - a['n']:,} more trades (about {need:,} in total)")
     pairs = [("What actually happened", f"{100*a['edge_per_dollar']:+.2f}¢ profit per dollar wagered"),
              ("After removing luck", f"{100*p['mean']:+.2f}¢ per share &nbsp;<span class=\"dim\">(90% range {100*p['ci90'][0]:+.2f}¢ to {100*p['ci90'][1]:+.2f}¢)</span>"),
              ("Chance the edge is real", f"{p['p_meaningful_positive']:.0%} positive &nbsp;·&nbsp; {p['p_meaningful_negative']:.0%} negative"),
              ("Record still needed", more),
              ("Compared with 124,064 wallets", f"profit {q['edge_per_dollar']:.0f}th percentile &nbsp;·&nbsp; bet-size variation {q['sizing_dispersion']:.0f}th &nbsp;·&nbsp; number of trades {q['trades']:.0f}th"),
-             ("Bet sizing", "varies with conviction — top 30% of the population" if q["sizing_dispersion"] >= 70 else ("every bet the same size — the population's coin-flipper pattern" if q["sizing_dispersion"] <= 30 else "typical variation"))]
+             ("Bet sizing", "varies with conviction, top 30% of the population" if q["sizing_dispersion"] >= 70 else ("every bet the same size, the population's coin-flipper pattern" if q["sizing_dispersion"] <= 30 else "typical variation"))]
     return f'<div class="rc"><div class="rc-h"><div><div class="rc-t">{title}</div><div class="rc-s">{a["n"]:,} trades · ${a["dollars"]:,.0f} wagered · {"profit" if a["pnl"]>=0 else "loss"} ${abs(a["pnl"]):,.0f}{note}</div></div>{badge(rep["verdict"])}</div><div class="rc-g">{rowsf(pairs)}</div></div>'
 
 def html_card_returns(title, rep, sub):
     need = rep["periods_needed_for_95pct"]
-    more = "not applicable — the average day is not positive" if math.isinf(need) else ("none — already conclusive" if need <= rep["n_periods"] else f"about {need/252:.0f} more years of trading ({need:,} days in total)")
+    more = "not applicable, the average day is not positive" if math.isinf(need) else ("none, already conclusive" if need <= rep["n_periods"] else f"about {need/252:.0f} more years of trading ({need:,} days in total)")
     pairs = [("Return", f"{rep['annualized_return']:+.1%} a year &nbsp;<span class=\"dim\">(95% range {rep['annualized_return_ci95'][0]:+.0%} to {rep['annualized_return_ci95'][1]:+.0%})</span>"),
              ("Return per unit of risk", f"Sharpe {rep['sharpe']:.2f} &nbsp;·&nbsp; worst drop {rep['max_drawdown']:.1%}"),
              ("Chance the return is real", f"{rep['p_positive']:.0%}"),
@@ -106,7 +127,7 @@ def cluster_bars():
     for i, r in enumerate(t.itertuples()):
         y = T + i * rowh + rowh / 2; cls = "gain" if r.edge_per_dollar >= 0 else "loss"
         x0, x1 = (z, xs(r.edge_per_dollar)) if r.edge_per_dollar >= 0 else (xs(r.edge_per_dollar), z)
-        o.append(f'<g class="mark"><title>{r.name}: {r.edge_per_dollar:+.2f}¢ per dollar (90% CI {r.ci_lo_d:+.2f} to {r.ci_hi_d:+.2f}), {r.wallets:,} wallets, {r.trades:,} trades, ${r.notional_M:,.0f}M — {r.verdict}</title>')
+        o.append(f'<g class="mark"><title>{r.name}: {r.edge_per_dollar:+.2f}¢ per dollar (90% CI {r.ci_lo_d:+.2f} to {r.ci_hi_d:+.2f}), {r.wallets:,} wallets, {r.trades:,} trades, ${r.notional_M:,.0f}M, {r.verdict}</title>')
         o.append(f'<rect x="{x0:.1f}" y="{y-7:.1f}" width="{max(x1-x0,1):.1f}" height="14" class="{cls}"/>')
         o.append(f'<line x1="{xs(r.ci_lo_d):.1f}" x2="{xs(r.ci_hi_d):.1f}" y1="{y:.1f}" y2="{y:.1f}" class="axis"/><line x1="{xs(r.ci_lo_d):.1f}" x2="{xs(r.ci_lo_d):.1f}" y1="{y-5:.1f}" y2="{y+5:.1f}" class="axis"/><line x1="{xs(r.ci_hi_d):.1f}" x2="{xs(r.ci_hi_d):.1f}" y1="{y-5:.1f}" y2="{y+5:.1f}" class="axis"/>')
         o.append(f'<text x="{L-8}" y="{y+4:.1f}" class="lbl" text-anchor="end">{r.name}</text>')
@@ -159,11 +180,11 @@ def rc(addr, title):
     row = df[df.trader.str.lower() == addr.lower()].iloc[0]; return html_card(title, evaluate(from_wallet_row(row)))
 cards = rc("0x2728d99B2405a52db60160837E130B3ba3c1A83c", "The biggest winner in the file") + rc("0x99C538dB47a2cBc0A56EbF465309d678a6f7d406", "A one-trade wallet the dataset labels \"sharp\"") + \
         rc(df[(df.n >= 50) & (df.trader_label == "sharp")].sort_values("trader_pnl").iloc[len(df[(df.n >= 50) & (df.trader_label == "sharp")]) // 2].trader, "A typical 50+-trade wallet labeled \"sharp\"") + \
-        html_card("A made-up 60-trade record, to show the tool on trade data", evaluate(from_trades(pd.read_csv("/Users/advaymonga/Desktop/sif/sif-application-fall-2026/examples/sample_trades.csv"))), note=" · example, not real")
+        html_card("A made-up 60-trade record, to show the tool on trade data", evaluate(from_trades(pd.read_csv("/Users/advaymonga/Desktop/sif/sif-application-fall-2026/examples/sample_trades.csv"))), note=" (example data, not real)")
 SL = json.load(open("/Users/advaymonga/Desktop/sif/sif-application-fall-2026/deliverables/siflive_dashboard_2026-09-08.json"))
 def sl(k):
     h = SL["history"][k]; eq = pd.Series(h["equity"], index=pd.to_datetime(h["timestamps"], unit="s")); r = eq.pct_change().dropna(); rep = evaluate_returns(r.values)
-    return rep, html_card_returns("SIF Live — " + ("the past year" if k == "1Y" else "the past three months"), rep, f"{eq.index[0].date()} to {eq.index[-1].date()} · ${eq.iloc[0]:,.0f} to ${eq.iloc[-1]:,.0f}")
+    return rep, html_card_returns("SIF Live: " + ("the past year" if k == "1Y" else "the past three months"), rep, f"{eq.index[0].date()} to {eq.index[-1].date()} · ${eq.iloc[0]:,.0f} to ${eq.iloc[-1]:,.0f}")
 rep1y, card1y = sl("1Y"); rep3m, card3m = sl("3M"); yrs = rep1y["periods_needed_for_95pct"] / 252
 P_ = pd.DataFrame(SL["positions"]); P_["mv"] = P_.market_value.astype(float); P_["upl"] = P_.unrealized_pl.astype(float); P_["px"] = P_.current_price.astype(float)
 pos_n = len(P_); pos_win = int((P_.upl > 0).sum()); gross = P_.mv.abs().sum(); net = P_.mv.sum(); shorts = P_[P_.side == "short"]; cheap_shorts = int((shorts.px < 10).sum())
@@ -198,6 +219,7 @@ a{{color:var(--sif-red);text-decoration:none;border-bottom:1px solid transparent
 .chart .lbl{{fill:var(--ink);font-size:12.5px}} .chart .lbl.strong{{fill:var(--ink);font-weight:600}} .chart .lbl.accent{{fill:var(--sif-red);font-weight:600}} .chart .lbl.loss{{fill:var(--negative);font-weight:600}} .chart .lbl.muted{{fill:var(--muted)}}
 .chart .ref{{fill:var(--muted)}} .chart .ref2{{fill:var(--line)}} .chart .acc{{fill:var(--sif-red);stroke:var(--paper);stroke-width:2}} .chart .ci{{stroke:var(--sif-red);stroke-width:2}} .chart .gap{{stroke:var(--muted);stroke-width:1.5;stroke-dasharray:3 3}}
 .chart .bar{{fill:var(--sif-red)}} .chart rect.loss{{fill:var(--negative)}} .chart rect.gain{{fill:var(--positive)}} .chart .lbl.gain{{fill:var(--positive);font-weight:600}} .chart .p-farm{{fill:var(--gold)}} .chart .p-bust{{fill:var(--negative)}} .chart .mark:hover .bar,.chart .mark:hover .acc{{filter:brightness(1.15)}} .chart .mark{{cursor:default}}
+.chart .fbox{{fill:var(--wash);stroke:var(--line);stroke-width:1}} .chart .arrow{{fill:none;stroke:var(--muted);stroke-width:1.5}} .chart .flow-mid{{fill:var(--sif-red);font-family:var(--font-num);font-size:12.5px}}
 .chart .cone{{fill:var(--muted);opacity:.14}} .chart .cone2{{fill:var(--muted);opacity:.10}} .chart .eq{{fill:none;stroke:var(--sif-red);stroke-width:2.2;stroke-linejoin:round}} .chart .zero{{stroke:var(--ink);stroke-width:1;stroke-dasharray:4 4;opacity:.5}}
 .cap{{color:var(--muted);font-size:.8rem;margin:0 0 18px;line-height:1.45}}
 .tw{{overflow-x:auto;margin:8px 0 18px;background:var(--paper);border:1px solid var(--line)}} table{{border-collapse:collapse;width:100%;font-family:var(--font-ui);font-size:.82rem;font-variant-numeric:tabular-nums}}
@@ -219,12 +241,61 @@ pre.card{{background:var(--paper);border:1px solid var(--line);border-left:4px s
 <div class="topbar"><p class="kicker">Smith Investment Fund · Is a track record skill, or luck?</p><h1>SIF Application, Fall 2026</h1>
 <p class="sub">Advay Monga · An evaluator built from 604,578 Polymarket wallets, pointed at the census and at SIF Live.</p></div>
 
+{umap_svg()}
+<div class="cap"><strong>Figure 1. The dataset: 604,578 Polymarket wallets, grouped by how they trade.</strong> Each dot is one of the 124,064 wallets that placed 20 or more trades (14,000 shown); wallets that trade alike sit near each other. The groups were formed without any profit data, and named afterwards once it was clear what each contained. Two are automated accounts trading around the clock, three are accounts farming the platform's rewards with risk-free trades, two are accounts that lost everything. Only one of those groups turns out to make money, see Figure 3.</div>
+
+<p>From those wallets I built an evaluator that separates skill from luck in a track record, then pointed it at the wallets themselves and at SIF Live's public trading account.</p>
+
 {cone_svg()}
-<div class="cap"><strong>SIF Live, one year of daily equity, indexed to 100.</strong> The shaded band is where a strategy with <em>zero</em> true edge and the same daily volatility would end up (68% inner, 95% outer). SIF Live finished at {100*(SL['history']['1Y']['equity'][-1]/SL['history']['1Y']['equity'][0]-1):+.1f}% — inside the band. Fine result; not yet evidence.</div>
+<div class="cap"><strong>Figure 2. SIF Live, one year of daily account value, indexed to 100.</strong> The shaded band is where a strategy with <em>zero</em> true edge and the same daily volatility would end up (68% inner, 95% outer). SIF Live finished at {100*(SL['history']['1Y']['equity'][-1]/SL['history']['1Y']['equity'][0]-1):+.1f}% , inside the band. A fine result, but not yet evidence.</div>
 
 <h2>Results: SIF Live</h2>
+<p><em>Sharpe</em> appears in the cards below: it is the return divided by how much the account value swings around, so a higher number means the same return with a smoother ride. Around 0.5 is ordinary for a simple stock strategy, 1.0 is good, 2.0 is rare.</p>
 <p>The club's dashboard publishes the daily value of its paper account. The strategy is dollar-neutral cross-sectional mean reversion, with {pos_n} open positions on 8 Sep 2026 (${gross:,.0f} of stock long and short combined, ${net:+,.0f} net). Here is what the evaluator says about it.</p>
 {card1y}{card3m}
+
+
+<h2>Results: the census</h2>
+<p>The dataset is 604,578 Polymarket wallets. It comes with a label on each wallet, awful, bad, good or sharp, and that label is mostly luck: it is just a cut on how much money the wallet made, and most wallets only placed a handful of bets. A check against what a model predicts for each wallet flags {pct(lab['flag_rate'],0)} of the labels as probably wrong, and {lab['flag_by_label']['sharp']*100:.0f}% of the "sharp" ones.</p>
+
+<h3>Which groups actually make money?</h3>
+<p>Because the groups were formed without seeing profits, running each one through the evaluator is a fair test of whether the grouping found anything real. Each group is treated as one large record. The uncertainty comes from resampling wallets rather than individual trades, so wallets betting on the same events do not count as separate evidence.</p>
+{cluster_bars()}
+<div class="cap"><strong>Figure 3.</strong> Profit per dollar wagered by group, with the 90% range. A tick means the group's edge is positive with at least 95% confidence; a cross means negative with at least 95%.</div>
+<div class="tw"><table><thead><tr><th>group</th><th>wallets</th><th>notional</th><th>P&amp;L $M</th><th>edge ¢/$</th><th>P(edge&gt;0)</th><th>verdict</th></tr></thead><tbody>{fam_rows}</tbody></table></div>
+<p>The automated accounts are the only group that clearly makes money: {MACH.edge_per_dollar:+.2f}¢ per dollar on ${MACH.notional_M:,.0f}M wagered, and {MACH.pnl_M:+.1f}M in profit. The reward farmers come out at zero ({FARM.edge_per_dollar:+.2f}¢ per dollar, range {FARM.ci_lo:+.2f} to {FARM.ci_hi:+.2f}), which is what should happen, because their trades are built to carry no risk. Ordinary traders lose {-RET.edge_per_dollar:.2f}¢ per dollar, and the accounts that blew up lose {-FAM[FAM.family == "bust"].iloc[0].edge_per_dollar:.1f}¢.</p>
+<p>Worth noticing: only {mach_prof:.0%} of the individual accounts inside those automated groups made money, and the group as a whole still has a certain edge. A group can make money while most of its members lose, and one member can look brilliant while the group has no edge at all. Telling those apart is what the evaluator is for.</p>
+<h3>Individual wallets</h3>
+<div class="tw"><table><thead><tr><th>record</th><th>trades</th><th>realized edge</th><th>luck-adjusted</th><th>P(real edge)</th><th>verdict</th></tr></thead><tbody>{summary_rows}</tbody></table></div>
+{cards}
+
+<h2>How the evaluator works</h2>
+{flow_svg()}
+<div class="cap"><strong>Figure 4.</strong> The five steps between a raw track record and a verdict.</div>
+<p>What makes this work on betting data is that the luck term is not a guess. A bet at 50¢ either doubles or goes to zero; a bet at 97¢ barely moves either way. So the amount a record could swing on luck alone follows from the prices traded and the number of trades, and it can be measured directly: on 75,000 settled bets in this dataset it comes to 0.87·p(1-p)/n. Step 3 then supplies the other half, since a huge result over a short record is more likely to be luck in a population where large real edges are rare.</p>
+<p class="small"><strong>How to read a card.</strong> <em>What actually happened</em> is the raw result. <em>After removing luck</em> is the best estimate of real ability, which sits closer to zero the shorter the record. <em>Chance the edge is real</em> is the probability that ability is meaningfully above (or below) zero. <em>Record still needed</em> is how much more trading would settle the question at the current pace. Percentiles compare against the 124,064 wallets with 20 or more trades.</p>
+
+<h2>How it was built and checked on the dataset</h2>
+<h3>Step 1, Why the dataset's own labels are no good</h3>
+<p>A wallet that placed three bets and won two is labelled "sharp". Checking every label against what a model trained on all the other wallets would predict flags {pct(lab['flag_rate'],0)} of them as probably wrong, and {lab['flag_by_label']['sharp']*100:.0f}% of the "sharp" ones. So the label cannot be the thing we try to predict. It has to be replaced with a probability that the wallet is actually good.</p>
+<h3>Step 2, Working out how much skill exists</h3>
+<p>Results across the population are spread widely, but most of that spread is luck. Subtracting the known amount of randomness leaves the spread of real ability: 91% of wallets sit within one cent per share of zero, with thin tails on both sides. That answer ships with the tool, and each wallet's probability of having a real edge becomes the thing the model below tries to predict, instead of the original label.</p>
+<h3>Step 3, Checking that the new target is meaningful</h3>
+{grouped_auc()}
+<div class="cap"><strong>Figure 5.</strong> Five-fold cross-validated AUC of a gradient-boosted model on 27 behavior-only features (nothing derived from profit). Same features, same wallets, three targets. <em>AUC</em> is how often the model ranks a randomly chosen skilled wallet above a randomly chosen unskilled one: 0.50 is a coin flip, 1.00 is perfect. <em>Cross-validated</em> means each wallet is scored by a model that never saw it during training.</div>
+<p>If the new target is real, how a wallet trades should predict it. It does: {a50:.2f} for wallets with 50 or more trades ({a20:.2f} at 20+, {auc['n>=100 | denoised skill']['auc']:.2f} at 100+). The same model, the same wallets, the same 27 measures of behaviour, aimed at the dataset's original label instead, scores {r50:.2f}. Nothing about the inputs changed. The target was the problem.</p>
+{importance()}
+<div class="cap"><strong>Figure 6.</strong> What the model uses: how much AUC it loses when each feature is scrambled, so a longer bar means the model relied on that feature more. <em>Bet-size dispersion</em> is the standard deviation of a wallet's bet sizes divided by its average bet. It is high when the wallet varies its stake, near zero when every bet is the same size. It is {attr.importance.iloc[0]/attr.importance.iloc[1]:.1f}× more important than anything else, which is why the evaluator reports a sizing front.</div>
+<h3>Step 4, Checking the model against real money</h3>
+{deciles()}
+<div class="cap"><strong>Figure 7.</strong> Wallets with 50+ trades sorted into ten equal groups by predicted skill, each wallet scored by a model that never trained on it; bars are realized profit per dollar. Only the top decile is positive ({top.c_per_dollar:+.2f}¢/$, {pct(top.frac_profitable,0)} profitable, ${top.notional_M:,.0f}M notional); deciles 4–8 lose 2–7¢/$.</div>
+
+<h2>What the evaluator reports</h2>
+<p>It takes a wallet address, a file of trades, or a series of daily account values. For any of them it returns what the record actually earned, what it earned after removing luck, the range that figure could plausibly sit in, the chance the edge is real, how much more trading would be needed before the record settles the question, and where the record ranks among the {124064:,} wallets that placed 20 or more trades.</p>
+<p>Given individual trades it also reports whether the prices paid were fair, whether the bigger bets did better than the smaller ones, how much of the profit rests on the single best trade, whether the first half of the record matches the second, and the chance of a large loss at a given bet size. Given daily account values it reports the same first-half-versus-second-half check, how the longest losing run compares with what chance would produce, whether one day's result predicts the next, the chance of a large drawdown next year, and how much of the return is explained by the market if a benchmark is supplied.</p>
+<p>It runs from a 16 KB reference file and needs no access to the original dataset.</p>
+
+<h2>Four things the numbers say about SIF Live</h2>
 <ul class="lede">
 <li><strong>{rep1y['annualized_return']:+.1%} a year is a fine result, but it is not yet proof.</strong> There is a {1-rep1y['p_positive']:.0%} chance a strategy with no real edge would have done this well or better over the same year. To be 95% sure the edge is real, at this level of return and volatility, would take about {yrs:.0f} more years.</li>
 <li><strong>The list of open positions looks better than the strategy is.</strong> {pos_win} of the {pos_n} open positions are showing a profit, while the whole year returned {rep1y['annualized_return']:+.1%}. The 5% stop-loss closes losing positions, so they leave the list and the winners stay on it. The list shows what survived, not how the strategy did.</li>
@@ -232,54 +303,14 @@ pre.card{{background:var(--paper);border:1px solid var(--line);border-left:4px s
 <li><strong>One design choice worth testing:</strong> the strategy buys a stock because it has fallen too far and should bounce, then sells it if it falls another 5%. The stop-loss fires exactly when the strategy's own logic says the bounce is most likely.</li>
 </ul>
 
-<h2>Results: the census</h2>
-<p>The dataset is 604,578 Polymarket wallets. It comes with a label on each wallet — awful, bad, good or sharp — and that label is mostly luck: it is just a cut on how much money the wallet made, and most wallets only placed a handful of bets. A check against what a model predicts for each wallet flags {pct(lab['flag_rate'],0)} of the labels as probably wrong, and {lab['flag_by_label']['sharp']*100:.0f}% of the "sharp" ones.</p>
-<p>Grouping wallets by how they trade — never by how much they made — splits the population into four kinds.</p>
-{umap_svg()}
-<div class="cap"><strong>Figure 1.</strong> Each dot is one of 124,064 wallets that placed 20 or more trades (14,000 shown). Wallets that trade in similar ways sit near each other. The groups were formed without any profit data; the names were added afterwards, once it was clear what each group contained. Two groups are automated accounts trading around the clock, three are accounts farming the platform's rewards with risk-free trades, and two are accounts that lost everything they put in.</div>
-<h3>Which groups actually make money?</h3>
-<p>Because the groups were formed without seeing profits, running each one through the evaluator is a fair test of whether the grouping found anything real. Each group is treated as one large record. The uncertainty comes from resampling wallets rather than individual trades, so wallets betting on the same events do not count as separate evidence.</p>
-{cluster_bars()}
-<div class="cap"><strong>Figure 2.</strong> Profit per dollar wagered by group, with the 90% range. A tick means the group's edge is positive with at least 95% confidence; a cross means negative with at least 95%.</div>
-<div class="tw"><table><thead><tr><th>group</th><th>wallets</th><th>notional</th><th>P&amp;L $M</th><th>edge ¢/$</th><th>P(edge&gt;0)</th><th>verdict</th></tr></thead><tbody>{fam_rows}</tbody></table></div>
-<p>The automated accounts are the only group that clearly makes money: {MACH.edge_per_dollar:+.2f}¢ per dollar on ${MACH.notional_M:,.0f}M wagered, and {MACH.pnl_M:+.1f}M in profit. The reward farmers come out at zero ({FARM.edge_per_dollar:+.2f}¢ per dollar, range {FARM.ci_lo:+.2f} to {FARM.ci_hi:+.2f}), which is what should happen — their trades are built to carry no risk. Ordinary traders lose {-RET.edge_per_dollar:.2f}¢ per dollar, and the accounts that blew up lose {-FAM[FAM.family == "bust"].iloc[0].edge_per_dollar:.1f}¢.</p>
-<p>Worth noticing: only {mach_prof:.0%} of the individual accounts inside those automated groups made money, and the group as a whole still has a certain edge. A group can make money while most of its members lose, and one member can look brilliant while the group has no edge at all. Telling those apart is what the evaluator is for.</p>
-<h3>Individual wallets</h3>
-<div class="tw"><table><thead><tr><th>record</th><th>trades</th><th>realized edge</th><th>luck-adjusted</th><th>P(real edge)</th><th>verdict</th></tr></thead><tbody>{summary_rows}</tbody></table></div>
-{cards}
-
-<h2>How the evaluator works</h2>
-<p>Every record is treated as <em>true edge + noise</em> — the result you see is the trader's real ability plus randomness. For bets, the size of the randomness is known exactly: it shrinks with the number of trades and depends on the prices traded (variance ≈ 0.87·p(1−p)/n, calibrated on 75k resolved single bets in the census). The <em>prior</em> — what edges are common in this population before looking at any one record — is the census's own distribution of true edge. </p>
-<p class="small"><strong>How to read a card.</strong> <em>Realized edge</em> is what happened. <em>Luck-adjusted edge</em> is the posterior mean after shrinking toward the population. <em>P(edge &gt; +0.5¢)</em> is the probability the record reflects real, meaningful edge. <em>Trades for 95% proof</em> is how much more record it would take at the current pace. Percentiles compare against the {124064:,} wallets with 20+ trades.</p>
-
-<h2>How it was built and checked on the dataset</h2>
-<h3>Step 1 — Why the dataset's own labels are no good</h3>
-<p>A wallet that placed three bets and won two is labelled "sharp". Checking every label against what a model trained on all the other wallets would predict flags {pct(lab['flag_rate'],0)} of them as probably wrong, and {lab['flag_by_label']['sharp']*100:.0f}% of the "sharp" ones. So the label cannot be the thing we try to predict. It has to be replaced with a probability that the wallet is actually good.</p>
-<h3>Step 2 — Working out how much skill exists</h3>
-<p>Results across the population are spread widely, but most of that spread is luck. Subtracting the known amount of randomness leaves the spread of real ability: 91% of wallets sit within one cent per share of zero, with thin tails on both sides. That answer ships with the tool, and each wallet's probability of having a real edge becomes the thing the model below tries to predict — instead of the original label.</p>
-<h3>Step 3 — Checking that the new target is meaningful</h3>
-{grouped_auc()}
-<div class="cap"><strong>Figure 3.</strong> Five-fold cross-validated AUC of a gradient-boosted model on 27 behavior-only features (nothing derived from profit). Same features, same wallets, three targets. <em>AUC</em> is how often the model ranks a randomly chosen skilled wallet above a randomly chosen unskilled one: 0.50 is a coin flip, 1.00 is perfect. <em>Cross-validated</em> means each wallet is scored by a model that never saw it during training.</div>
-<p>If the new target is real, how a wallet trades should predict it. It does: {a50:.2f} for wallets with 50 or more trades ({a20:.2f} at 20+, {auc['n>=100 | denoised skill']['auc']:.2f} at 100+). The same model, the same wallets, the same 27 measures of behaviour, aimed at the dataset's original label instead, scores {r50:.2f}. Nothing about the inputs changed. The target was the problem.</p>
-{importance()}
-<div class="cap"><strong>Figure 4.</strong> What the model uses: how much AUC it loses when each feature is scrambled, so a longer bar means the model relied on that feature more. <em>Bet-size dispersion</em> is the standard deviation of a wallet's bet sizes divided by its average bet — high when it varies its stake, near zero when every bet is the same size. It is {attr.importance.iloc[0]/attr.importance.iloc[1]:.1f}× more important than anything else — which is why the evaluator reports a sizing front.</div>
-<h3>Step 4 — Checking the model against real money</h3>
-{deciles()}
-<div class="cap"><strong>Figure 5.</strong> Wallets with 50+ trades sorted into ten equal groups by predicted skill, each wallet scored by a model that never trained on it; bars are realized profit per dollar. Only the top decile is positive ({top.c_per_dollar:+.2f}¢/$, {pct(top.frac_profitable,0)} profitable, ${top.notional_M:,.0f}M notional); deciles 4–8 lose 2–7¢/$.</div>
-
-<h2>What the evaluator reports</h2>
-<p>It takes a wallet address, a file of trades, or a series of daily account values. For any of them it returns what the record actually earned, what it earned after removing luck, the range that figure could plausibly sit in, the chance the edge is real, how much more trading would be needed before the record settles the question, and where the record ranks among the {124064:,} wallets that placed 20 or more trades.</p>
-<p>Given individual trades it also reports whether the prices paid were fair, whether the bigger bets did better than the smaller ones, how much of the profit rests on the single best trade, whether the first half of the record matches the second, and the chance of a large loss at a given bet size. Given daily account values it reports the same first-half-versus-second-half check, how the longest losing run compares with what chance would produce, whether one day's result predicts the next, the chance of a large drawdown next year, and how much of the return is explained by the market if a benchmark is supplied.</p>
-<p>It runs from a 16 KB reference file and needs no access to the original dataset.</p>
-
 <h2>Limitations</h2>
 <ul>
-<li>The thing the model predicts is itself an estimate, not a known truth. The check that it means something is Figure 5: the ranking lines up with money the model never saw.</li>
+<li>The thing the model predicts is itself an estimate, not a known truth. The check that it means something is Figure 7: the ranking lines up with money the model never saw.</li>
 <li>The compressed 12-number version of each wallet is a worse predictor than the full 27 measures (0.82 against 0.86). It earns its place as the map in Figure 1, not as the model.</li>
 <li>The dataset is a single snapshot. It shows which wallets <em>have</em> had an edge, not that they will keep it. Confirming that needs data from after the snapshot.</li>
 </ul>
 
-<p class="small">Repository: <code>sif-application-fall-2026/</code> — <code>trackrecord/</code> (tool, tests, reference prior), <code>analysis/</code> (everything above), <code>README.md</code>.</p>
+<p class="small">Repository: <code>sif-application-fall-2026/</code> contains <code>trackrecord/</code> (tool, tests, reference prior), <code>analysis/</code> (everything above), <code>README.md</code>.</p>
 
 <h2>Method</h2>
 <ul class="small">
