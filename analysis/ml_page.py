@@ -236,6 +236,8 @@ pre.card{{background:var(--paper);border:1px solid var(--line);border-left:4px s
 .rc-g{{display:grid;grid-template-columns:minmax(150px,34%) 1fr;gap:0}} .rc-g>div{{padding:8px 16px;border-bottom:1px solid var(--soft-line)}}
 .rc-g>div:nth-last-child(-n+2){{border-bottom:none}} .rc-g .k{{color:var(--muted);font-size:.8rem}} .rc-g .v{{font-family:var(--font-num);font-size:.84rem;font-variant-numeric:tabular-nums}}
 .rc-g .dim{{color:var(--muted)}}
+ol.steps{{padding-left:20px}} ol.steps li{{margin-bottom:9px}} .dim{{color:var(--muted)}}
+.dfn{{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--muted);padding:10px 14px;margin:0 0 14px;font-size:.88rem}}
 .small{{font-size:.82rem;color:var(--muted)}} code{{font-family:var(--font-num);font-size:.85em;background:var(--paper);border:1px solid var(--soft-line);padding:1px 5px}}
 @media (prefers-reduced-motion: reduce){{*{{transition:none}}}}
 </style>
@@ -267,7 +269,8 @@ pre.card{{background:var(--paper);border:1px solid var(--line);border-left:4px s
 </ul>
 
 <h2>3. The same method on SIF Live</h2>
-<p>The club's dashboard publishes its paper account's daily value, so the same test applies. Sharpe is return divided by how much the value swings: 0.5 is ordinary, 1.0 good, 2.0 rare.</p>
+<p>The club's dashboard publishes its paper account's daily value, so the same test applies.</p>
+<p class="dfn"><strong>Sharpe</strong> = return ÷ how much the account value swings. Same return with a smoother ride gives a higher number. Roughly: 0.5 ordinary, 1.0 good, 2.0 rare.</p>
 {card1y}
 <ul>
 <li><strong>{rep1y['annualized_return']:+.1%} a year is a fine result, but not proof.</strong> A strategy with no edge would do this well or better {1-rep1y['p_positive']:.0%} of the time. Proving it takes about {yrs:.0f} more years.</li>
@@ -309,6 +312,18 @@ pre.card{{background:var(--paper);border:1px solid var(--line);border-left:4px s
 <li>Only the top group makes money ({top.c_per_dollar:+.2f}¢ per dollar, {pct(top.frac_profitable,0)} in profit). Groups 4 to 8 lose 2 to 7¢.</li>
 <li>The model never saw profit, and its ranking still lines up with real money. That is the check that the method works.</li>
 </ul>
+
+<h2>6. Every step, in order</h2>
+<ol class="steps">
+<li><strong>Decode the raw columns.</strong> The volume column is shares, not dollars, so price = dollars ÷ shares. The time columns are milliseconds into the day. For wallets with one trade, profit matches a settlement payout 85% of the time, so that bet's outcome is recoverable.</li>
+<li><strong>Build 26 measures of behaviour per wallet.</strong> Trade count and frequency, bet size and how much it varies, prices traded, time of day and its spread, how much of the order book each trade eats, topic mix. Profit, profit per share and the dataset's label are excluded.</li>
+<li><strong>Group the wallets.</strong> Normalise the 26 measures, compress to 12 numbers with a denoising autoencoder, reduce to 2 axes with UMAP, then find groups with HDBSCAN. 124,064 wallets with 20 or more trades. <span class="dim">(Figure 1)</span></li>
+<li><strong>Score each group.</strong> Pool its wallets into one record and compute profit per dollar. The 90% range comes from resampling wallets 2,000 times, so wallets betting on the same events do not count separately. <span class="dim">(Figure 2)</span></li>
+<li><strong>Measure luck.</strong> Profit per share swings by p(1-p) per bet and p(1-p)/n over a record. The multiplier 0.87 is fitted on the 75,855 one-bet wallets rather than assumed.</li>
+<li><strong>Remove luck from the population.</strong> Subtracting that swing from the spread of everyone's results leaves the spread of real skill: 91% of wallets within one cent per share of zero.</li>
+<li><strong>Score a single record.</strong> Combine its result, its own luck size and that population spread. Out comes the luck-adjusted edge, a 90% range, the chance the edge is real, and how much more trading would settle it. <span class="dim">(Figure 3)</span></li>
+<li><strong>Check the whole thing.</strong> Train a model on the 26 behaviour measures to predict the luck-adjusted result, five-fold cross-validated: AUC {a50:.2f}, against {r50:.2f} for the dataset's own label. Then sort wallets by predicted skill and compare with profit the model never saw. <span class="dim">(Figures 4 to 6)</span></li>
+</ol>
 
 <h2>What the tool takes and returns</h2>
 <p>Give it a wallet address, a file of trades, or daily account values. It returns the raw result, the result after removing luck, the range that could sit in, the chance the edge is real, how much more trading would settle it, and where it ranks against the 124,064 wallets with 20 or more trades.</p>
