@@ -247,7 +247,7 @@ pre.card{{background:var(--paper);border:1px solid var(--line);border-left:4px s
 <p>Every row is one wallet: how often it traded, how big its bets were, at what prices, at what times of day, on what topics, and how much money it made.</p>
 <p>I grouped the wallets by <em>how</em> they trade and ignored how much they made. Wallets that trade alike end up near each other in the picture below. Four kinds of account show up.</p>
 {umap_svg()}
-<div class="cap"><strong>Figure 1.</strong> Each dot is one of the 124,064 wallets with 20 or more trades (14,000 shown). The groups were found without using any profit data. The names were added afterwards, once it was clear what each group contained.</div>
+<div class="cap"><strong>Figure 1.</strong> Each dot is one of the 124,064 wallets with 20 or more trades (14,000 shown). Each wallet starts as 26 measures of how it trades, which a neural network squeezes to 12 numbers, and UMAP then places on these two axes. The axes themselves have no units: only closeness means anything. No profit data was used, and the group names were added afterwards, once it was clear what each contained.</div>
 <ul>
 <li><strong>Machines.</strong> Two groups that trade around the clock, every day, with no breaks for sleep.</li>
 <li><strong>Farms.</strong> Three groups that place risk-free trades, mostly at 99¢, to collect the platform's rewards.</li>
@@ -291,7 +291,7 @@ pre.card{{background:var(--paper);border:1px solid var(--line);border-left:4px s
 <h3>Checking that the result means something</h3>
 <p>If the luck-adjusted number is real, then <em>how</em> a wallet trades should predict it. It does.</p>
 {grouped_auc()}
-<div class="cap"><strong>Figure 4.</strong> How well a model predicts each target, using 27 measures of behaviour and no profit data. AUC is how often it ranks a skilled wallet above an unskilled one. 0.50 is a coin flip, 1.00 is perfect. Each wallet is scored by a model that never saw it in training.</div>
+<div class="cap"><strong>Figure 4.</strong> How well a model predicts each target, using 26 measures of behaviour and no profit data. AUC is how often it ranks a skilled wallet above an unskilled one. 0.50 is a coin flip, 1.00 is perfect. Each wallet is scored by a model that never saw it in training.</div>
 <ul>
 <li>Predicting the luck-adjusted number: <strong>{a50:.2f}</strong> for wallets with 50 or more trades.</li>
 <li>Predicting the dataset's own "sharp / awful" label with the same model and the same wallets: <strong>{r50:.2f}</strong>. The label is mostly luck, so there is little to learn.</li>
