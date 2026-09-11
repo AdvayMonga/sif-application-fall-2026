@@ -2,10 +2,10 @@
 import json, re, sys, math, numpy as np, pandas as pd
 from common import load
 sys.path.insert(0, "/Users/advaymonga/Desktop/sif/sif-application-fall-2026")
-from trackrecord import evaluate, from_wallet_row, from_trades
-from trackrecord.cli import card, card_extra
-from trackrecord.diagnostics import extra_fronts
-from trackrecord.returns import evaluate_returns, card_returns
+from sifeval import evaluate, from_wallet_row, from_trades
+from sifeval.cli import card, card_extra
+from sifeval.diagnostics import extra_fronts
+from sifeval.returns import evaluate_returns, card_returns
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.model_selection import StratifiedKFold
 OUT = "/Users/advaymonga/Desktop/sif/sif-application-fall-2026/analysis/out/ml/"; ROOT = "/Users/advaymonga/Desktop/sif/sif-application-fall-2026/analysis/out/"
@@ -326,11 +326,11 @@ ol.steps{{padding-left:20px}} ol.steps li{{margin-bottom:9px}} .dim{{color:var(-
 </ol>
 
 <h2>The tool</h2>
-<p>All of this runs from a small Python package, <code>trackrecord</code>. Give it a wallet address, a file of trades, or daily account values, and it returns the raw result, the result after removing luck, the range that could sit in, the chance the edge is real, how much more trading would settle it, and where the record ranks against the 124,064 wallets with 20 or more trades.</p>
+<p>All of this runs from a small Python package, <code>sifeval</code>. Give it a wallet address, a file of trades, or daily account values, and it returns the raw result, the result after removing luck, the range that could sit in, the chance the edge is real, how much more trading would settle it, and where the record ranks against the 124,064 wallets with 20 or more trades.</p>
 <div class="tw"><table><thead><tr><th>command</th><th>input</th></tr></thead><tbody>
-<tr><td>trackrecord eval trades.csv</td><td>a file of trades: price, size, won</td></tr>
-<tr><td>trackrecord returns equity.csv</td><td>daily account values</td></tr>
-<tr><td>trackrecord wallet 0x...</td><td>any wallet in the dataset</td></tr>
+<tr><td>sifeval eval trades.csv</td><td>a file of trades: price, size, won</td></tr>
+<tr><td>sifeval returns equity.csv</td><td>daily account values</td></tr>
+<tr><td>sifeval wallet 0x...</td><td>any wallet in the dataset</td></tr>
 </tbody></table></div>
 <p>It carries the population's skill distribution in a 16 KB file, so it runs on a new record without needing the dataset. Six tests cover it.</p>
 <p><strong>Code and README:</strong> <a href="https://github.com/AdvayMonga/sif-application-fall-2026">github.com/AdvayMonga/sif-application-fall-2026</a></p>

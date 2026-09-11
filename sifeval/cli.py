@@ -1,4 +1,4 @@
-"""CLI: `python -m trackrecord eval trades.csv` or `python -m trackrecord wallet 0x... --data data.parquet`."""
+"""CLI: `python -m sifeval eval trades.csv` or `python -m sifeval wallet 0x... --data data.parquet`."""
 import argparse, json, math, sys, pandas as pd
 from .core import evaluate
 from .features import from_trades, from_wallet_row
@@ -29,7 +29,7 @@ def card(rep):
     return "\n".join(lines)
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(prog="trackrecord"); sub = ap.add_subparsers(dest="cmd", required=True)
+    ap = argparse.ArgumentParser(prog="sifeval"); sub = ap.add_subparsers(dest="cmd", required=True)
     e = sub.add_parser("eval", help="evaluate a CSV of trades (price,size,won[,pnl])"); e.add_argument("csv"); e.add_argument("--json", action="store_true")
     w = sub.add_parser("wallet", help="evaluate a wallet address from the SIF parquet"); w.add_argument("address"); w.add_argument("--data", default="data.parquet"); w.add_argument("--json", action="store_true")
     r = sub.add_parser("returns", help="evaluate a series of per-period returns (CSV with a 'return' column, or portfolio 'value' column)"); r.add_argument("csv"); r.add_argument("--periods-per-year", type=int, default=252); r.add_argument("--json", action="store_true")

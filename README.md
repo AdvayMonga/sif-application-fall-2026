@@ -8,15 +8,15 @@
 
 1. **A grouping of the wallets by how they trade**, using no profit data. It separates machines, reward farms, wallets that went bust, and ordinary traders.
 2. **A measurement of which groups actually make money.** Machines are the only group with a real edge (+0.85¢ per dollar wagered, $20.3M profit). Farms sit at zero because their trades carry no risk.
-3. **`trackrecord`**, a tool that takes any track record and reports how much of it is skill and how much is luck.
+3. **`sifeval`**, a tool that takes any track record and reports how much of it is skill and how much is luck.
 
 ## The tool
 
 ```bash
-python -m trackrecord eval examples/sample_trades.csv            # a file of trades: price, size in dollars, won (0/1)
-python -m trackrecord returns examples/sample_portfolio_values.csv   # daily account values, or a "return" column
-python -m trackrecord wallet 0x2728d99B... --data data.parquet   # any wallet in the dataset
-python -m trackrecord eval trades.csv --json                     # machine-readable output
+python -m sifeval eval examples/sample_trades.csv            # a file of trades: price, size in dollars, won (0/1)
+python -m sifeval returns examples/sample_portfolio_values.csv   # daily account values, or a "return" column
+python -m sifeval wallet 0x2728d99B... --data data.parquet   # any wallet in the dataset
+python -m sifeval eval trades.csv --json                     # machine-readable output
 ```
 
 Example:
@@ -36,7 +36,7 @@ It never models the market. It uses how a bet pays: buy a share at price `p` and
 
 - If the price is a fair probability, profit per share swings by `p(1-p)` per bet, and by `p(1-p)/n` over a record. A bet at 50¢ swings eight times more than a bet at 97¢.
 - The multiplier is measured, not assumed: on the 75,855 wallets that made exactly one bet, the real swing came to `0.87 · p(1-p)`.
-- Subtracting that swing from the spread of results across all wallets leaves the spread of real skill. 91% of wallets sit within one cent per share of zero. That distribution ships as `trackrecord/reference.json` (16 KB), so the tool runs without the dataset.
+- Subtracting that swing from the spread of results across all wallets leaves the spread of real skill. 91% of wallets sit within one cent per share of zero. That distribution ships as `sifeval/reference.json` (16 KB), so the tool runs without the dataset.
 
 Combining the three gives the luck-adjusted edge, a 90% range, the chance the edge is real, and how much more trading would settle the question.
 
@@ -52,7 +52,7 @@ Combining the three gives the luck-adjusted edge, a 90% range, the chance the ed
 
 | path | what |
 |---|---|
-| `trackrecord/` | the tool. `core.py` scores a record, `features.py` turns trades or a dataset row into inputs, `returns.py` handles P&L series, `diagnostics.py` the extra checks, `reference.json` the population prior |
+| `sifeval/` | the tool. `core.py` scores a record, `features.py` turns trades or a dataset row into inputs, `returns.py` handles P&L series, `diagnostics.py` the extra checks, `reference.json` the population prior |
 | `analysis/` | how everything was produced. `common.py` decodes the raw columns, `skill_luck.py` removes luck from the population, `ml_features.py` and `ml_active.py` build and group the behaviour measures, `cluster_eval.py` scores each group, `ml_skill.py` trains and checks the model, `ml_page.py` builds the report |
 | `tests/` | pytest for the tool |
 | `examples/` | sample inputs, both synthetic and labelled as such |
@@ -68,7 +68,7 @@ uv pip install --python .venv/bin/python pandas pyarrow numpy scipy scikit-learn
 
 cd analysis                               # the analysis, in order
 ../.venv/bin/python skill_luck.py         # remove luck from the population
-../.venv/bin/python build_reference.py    # write trackrecord/reference.json
+../.venv/bin/python build_reference.py    # write sifeval/reference.json
 ../.venv/bin/python ml_features.py        # 26 behaviour measures per wallet
 ../.venv/bin/python ml_active.py          # group the wallets
 ../.venv/bin/python cluster_eval.py       # score each group

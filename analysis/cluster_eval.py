@@ -2,7 +2,7 @@
 import json, sys, numpy as np, pandas as pd
 sys.path.insert(0, "/Users/advaymonga/Desktop/sif/sif-application-fall-2026")
 from common import load
-from trackrecord.core import posterior, load_reference
+from sifeval.core import posterior, load_reference
 OUT = "/Users/advaymonga/Desktop/sif/sif-application-fall-2026/analysis/out/ml/"
 NAMES = {0: "machines A", 11: "machines B", 3: "farm A", 13: "farm B", 14: "farm C", 8: "bust A", 10: "bust B"}
 
