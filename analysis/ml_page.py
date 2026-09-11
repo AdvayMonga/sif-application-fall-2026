@@ -241,7 +241,8 @@ ol.steps{{padding-left:20px}} ol.steps li{{margin-bottom:5px}} .dim{{color:var(-
 .dfn{{background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--muted);padding:7px 12px;margin:0 0 10px;font-size:.84rem}}
 .small{{font-size:.82rem;color:var(--muted)}} code{{font-family:var(--font-num);font-size:.85em;background:var(--paper);border:1px solid var(--soft-line);padding:1px 5px}}
 @media (prefers-reduced-motion: reduce){{*{{transition:none}}}}
-@media print{{.chart,.rc,.tw{{break-inside:auto}} h2{{break-after:avoid}} .cap{{break-before:avoid}}}}
+@page{{margin:11mm 9mm}}
+@media print{{.wrap{{padding:0;max-width:none}} .chart,.rc,.tw{{break-inside:auto}} h2{{break-after:avoid}} .cap{{break-before:avoid}}}}
 </style>
 <div class="wrap">
 <div class="topbar"><p class="kicker">Smith Investment Fund · Skill or luck?</p><h1>SIF Application, Fall 2026</h1>
@@ -292,15 +293,13 @@ ol.steps{{padding-left:20px}} ol.steps li{{margin-bottom:5px}} .dim{{color:var(-
 <li>Checked against the data: the 75,855 one-bet wallets swung by <strong>0.87 × p(1-p)</strong>, close to theory. The tool uses 0.87.</li>
 <li>Across all wallets, subtracting that luck leaves the real skill: <strong>91% sit within one cent per share of zero</strong>. So a big result over a few bets is almost certainly luck.</li>
 </ul>
-{flow_svg()}
-<div class="cap"><strong>Figure 3.</strong> The five steps from a record to an answer.</div>
 {card_whale}{card_oneshot}
 <p class="small">Both look excellent on raw profit. The first traded 2,072 times, so it is not luck. The second traded once, so it proves nothing, and the tool says so.</p>
 
 <h2>5. Checks</h2>
 <p>If the luck-adjusted number is real, how a wallet trades should predict it.</p>
 {grouped_auc()}
-<div class="cap"><strong>Figure 4.</strong> How well a model predicts each target from 26 measures of behaviour and no profit data. AUC is how often it ranks a skilled wallet above an unskilled one: 0.50 is a coin flip, 1.00 perfect. Each wallet is scored by a model that never saw it in training.</div>
+<div class="cap"><strong>Figure 3.</strong> How well a model predicts each target from 26 measures of behaviour and no profit data. AUC is how often it ranks a skilled wallet above an unskilled one: 0.50 is a coin flip, 1.00 perfect. Each wallet is scored by a model that never saw it in training.</div>
 <ul>
 <li>Luck-adjusted skill: <strong>{a50:.2f}</strong>. The dataset's own "sharp / awful" label, same model, same wallets: <strong>{r50:.2f}</strong>.</li>
 <li>That label is mostly luck. Checking each one against model predictions flags {pct(lab['flag_rate'],0)} as probably wrong, {lab['flag_by_label']['sharp']*100:.0f}% of the "sharp" ones.</li>
@@ -310,7 +309,7 @@ ol.steps{{padding-left:20px}} ol.steps li{{margin-bottom:5px}} .dim{{color:var(-
 <li>Wallets trading mid-range prices beat wallets buying 99¢ near-certainties.</li>
 </ul>
 {deciles()}
-<div class="cap"><strong>Figure 5.</strong> Wallets with 50 or more trades, sorted into ten groups by predicted skill, against the money they actually made. Each wallet scored by a model that never trained on it.</div>
+<div class="cap"><strong>Figure 4.</strong> Wallets with 50 or more trades, sorted into ten groups by predicted skill, against the money they actually made. Each wallet scored by a model that never trained on it.</div>
 <ul>
 <li>Only the top group makes money ({top.c_per_dollar:+.2f}¢ per dollar, {pct(top.frac_profitable,0)} in profit). Groups 4 to 8 lose 2 to 7¢.</li>
 <li>The model never saw profit, and its ranking still lines up with real money. That is the check that the method works.</li>
@@ -324,8 +323,8 @@ ol.steps{{padding-left:20px}} ol.steps li{{margin-bottom:5px}} .dim{{color:var(-
 <li><strong>Score each group.</strong> Pool its wallets into one record. The 90% range comes from resampling wallets 2,000 times. <span class="dim">(Figure 2)</span></li>
 <li><strong>Measure luck.</strong> Profit per share swings by p(1-p) per bet and p(1-p)/n over a record. The 0.87 multiplier is fitted on the 75,855 one-bet wallets, not assumed.</li>
 <li><strong>Remove luck from the population.</strong> Subtracting that swing leaves the spread of real skill: 91% of wallets within one cent per share of zero.</li>
-<li><strong>Score a single record.</strong> Combine its result, its own luck size and that population spread. <span class="dim">(Figure 3)</span></li>
-<li><strong>Check the whole thing.</strong> Predict the luck-adjusted result from behaviour alone, five-fold cross-validated: AUC {a50:.2f}, against {r50:.2f} for the dataset's own label. Then sort wallets by predicted skill and compare with profit the model never saw. <span class="dim">(Figures 4 and 5)</span></li>
+<li><strong>Score a single record.</strong> Combine its result, its own luck size and that population spread. </li>
+<li><strong>Check the whole thing.</strong> Predict the luck-adjusted result from behaviour alone, five-fold cross-validated: AUC {a50:.2f}, against {r50:.2f} for the dataset's own label. Then sort wallets by predicted skill and compare with profit the model never saw. <span class="dim">(Figures 3 and 4)</span></li>
 </ol>
 
 <h2>7. The tool</h2>
